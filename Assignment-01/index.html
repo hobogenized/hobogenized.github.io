@@ -42,53 +42,40 @@
    uniform vec3  uCursor;
    varying vec3  vPosition;
 
-   // COMPUTE THE Z FOR A SPHERE OF RADIUS r.
-
-   float computeZ(vec2 xy, float r) {
-      float zz = r * r - xy.x * xy.x - xy.y * xy.y;
-      if (zz < 0.)
-         return -1.;
-      else
-         return sqrt(zz);
+   float rt3(float x, float y, float z) {
+      return sqrt(x * x + y * y + z * z);
    }
 
    void main() {
-      float x = vPosition.x;
-      float y = vPosition.y;
-      float z = computeZ(vPosition.xy, 1.0);
+      float mX = abs(uCursor.x);
+      float mY = abs(uCursor.y);
+      float x = mod(sin(mod((vPosition.x * uTime), 30.)), uTime * 0.2);
+      x = mod((x * mX), 15.);
+      float y = mod(cos(mod((vPosition.y * uTime), 30.)), uTime * 0.4);
+      y = mod((y * mY), 15.);
+      float z = mod(tan(mod((vPosition.z * uTime), 30.)), uTime * 0.6);
+      z = mod((z * mX), 15.);
+      float c = rt3(x,y,z);
+      float a = mod(tan(mod((c * uTime), 30.)), uTime * 0.8);
+      a = mod((a * mY), 15.);
 
-      // BACKGROUND SHADE IS JUST BLACK (ZERO).
-
-      float s = 0.0;
-
-      // IF WE ARE IN THE SPHERE, THEN SHADE IT.
-
-      if (z > 0.) {
-
-         // START WITH DARK SHADE.
-
-         s = 0.2;
-
-         // ADD DIFFUSE SHADING WHERE SURFACE FACES THE LIGHT.
-
-//       float d = dot(vec3(x,y,z), vec3(1.,1.,sin(uTime))); // ANIMATE LIGHT DIRECTION.
-
-         float d = dot(vec3(x,y,z), vec3(1.,1.,1.));
-
-         if (d > 0.)
-            s += 0.3 * d;
-
-         // ADD CRAZY ANIMATED "WOODGRAIN" TEXTURE.
-
-	 s *= 0.9 + 0.1 * sin(10. * (x - y + z +
-	                             0.1 * sin(8. * (x +
-				               .3 * sin(30. * (x-y+z) +
-					                10. * uTime)))));
+      if (uCursor.z == 1.) {
+         x = 1. - x;
+         y = 1. - y;
+         z = 1. - z;
+         a = 1. - a;
       }
 
-      // MULTIPY SHADE BY "WOOD" COLOR.
+      if (mod(uTime, 360.) == 0.) {
+         x = tan(x / 2.);
+         y = sin(y / 3.);
+         z = cos(z / 4.);
+         a = cos(a / 5.);
+      }
 
-      gl_FragColor = vec4(s * vec3(1., 0.5, 0.), 1.);
+      float d = rt3(x,y,z);
+
+      gl_FragColor = vec4((x / d) * x,(y / d) * y,(z / d) * z,(a / d) * a);
    }
 </script>
 
