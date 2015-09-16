@@ -46,6 +46,10 @@
       return sqrt(x * x + y * y + z * z);
    }
 
+   float clickTransform(float coord) {
+      return ((1. - coord) * (1 - coord)) / (coord * coord);
+   }
+
    void main() {
       float mX = abs(uCursor.x);
       float mY = abs(uCursor.y);
@@ -60,10 +64,10 @@
       a = mod((a * mY), 15.);
 
       if (uCursor.z == 1.) {
-         x = 1. - x;
-         y = 1. - y;
-         z = 1. - z;
-         a = 1. - a;
+         x = clickTransform(x);
+         y = clickTransform(y);
+         z = clickTransform(z);
+         a = clickTransform(a);
       }
 
       if (mod(uTime, 360.) == 0.) {
