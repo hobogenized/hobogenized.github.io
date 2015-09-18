@@ -66,22 +66,19 @@
    //    sphere is the x,y,z,r definition of the sphere.
    //    material is the r,g,b color of the sphere.
 
-   vec3 shadeSphere(vec3 point, vec4 sphere, vec3 material, vec3 Ldir) {
-      vec3 color = vec3(120.,50.,25.);
-      vec3 diffuse = vec3(0.5, 0.5, 0.5);
+   vec3 shadeSphere(vec3 point, vec4 sphere, vec3 material) {
+      vec3 diffuse = vec3(.2, .3, .1);
       vec3 normal = (point - sphere.xyz) / sphere.w;
-      //vec3 lightDir = vec3(0., 0., -1.);
+      vec3 lightDir = normalize(vec3(2., 3., -1.));
 
       // YOU NEED TO COMPUTE COLOR FOR A DIFFUSELY SHADED SPHERE.
-
-      color = color * diffuse * max(0., dot(normal, Ldir));
 
       // FOR THE AMBIENT COMPONENT OF THE DIFFUSE SHADING, YOU CAN
       // USE A SIMPLE APPROXIMATION SUCH AS: ambient = material / 5.;
 
       vec3 ambient = material / 5.;
 
-      color = ambient + color;
+      vec3 color = ambient + Lrgb * diffuse * max(0., dot(normal, Ldir));;
 
       return color;
    }
@@ -89,32 +86,30 @@
    void main(void) {
       vec2 c = uCursor.xy;
 
-      Lrgb = vec3(1.,.5,0.);
+      Lrgb = vec3(.5,.5,0.);
       Ldir = normalize(vec3(c.x, c.y, 1. - 2. * dot(c, c)));
 
       // YOU NEED TO COMPUTE V AND W TO CREATE THE RAY FOR THIS PIXEL,
       // USING vPosition.x AND vPosition.y.
 
-      vec3 V = vec3(0.,0.,1.);
-      vec3 W = normalize(vec3(vPosition.x, vPosition.y, -3.));
+      vec3 V = vec3(0.,0.,100.);
+      vec3 W = normalize(vec3(vPosition.x, vPosition.y, 3.));
 
       // YOU NEED TO SET x,y,z AND r FOR sphere.
 
-      sphere = vec4(0.,0.,-3.,1.);
+      sphere = vec4(0.,0.,-3.,25.);
 
       // YOU NEED TO SET r,g,b FOR material.
 
-      material = vec3(10.,100.,0.);
+      material = vec3(.5,.2,.1);
 
       vec3 color = vec3(0., 0., 0.);
       float t = raySphere(V, W, sphere);
-      if (t < 10000.)
-         color = shadeSphere(V + t * W, sphere, material, Ldir);
-
-      color.r = 0.5; // We added this line in class.
-
-      color = pow(color, vec3(.45,.45,.45)); // Do Gamma correction.
-
+      if (t < 10000.) {
+         color = shadeSphere(V + t * W, sphere, material);
+     }
+         color = pow(color, vec3(.45,.45,.45)); // Do Gamma correction.
+	  
       gl_FragColor = vec4(color, 1.);        // Set opacity to 1.
    }
 </script>
