@@ -22,6 +22,7 @@
    varying vec3  vPosition;
 
    vec4 sphere;
+   vec4 spheres[3];
    vec3 material;
 
    vec3 Lrgb;
@@ -95,22 +96,42 @@
       vec3 V = vec3(0.,0.,100.);
       vec3 W = normalize(vec3(vPosition.x, vPosition.y, 3.));
 
-      // YOU NEED TO SET x,y,z AND r FOR sphere.
-
-      sphere = vec4(0.,0.,-3.,25.);
-
       // YOU NEED TO SET r,g,b FOR material.
 
-      material = vec3(.5,.2,.1);
-
       vec3 color = vec3(0., 0., 0.);
-      float t = raySphere(V, W, sphere);
-      if (t < 10000.) {
-         color = shadeSphere(V + t * W, sphere, material);
-     }
-         color = pow(color, vec3(.45,.45,.45)); // Do Gamma correction.
+
+
+      // YOU NEED TO SET x,y,z AND r FOR sphere.
+
+      for (int i = 0; i < 2; ++i) {
+      	float pos = float(i) + 1.;
+
+      	float radius = 25. / pos;
+
+      	spheres[i] = vec4(pos * pos * cos(uTime), pos * pos * sin(uTime), pos * pos * radius * -1., radius);
+
+      }
+
+      float t = 100000.;
+      int chosenSphere;
+      for (int i = 0; i < 2; ++i) {
+      	    float pos = float(i) + 1.;
+      		float tempT = raySphere(V, W, spheres[i]);
+      		if (t > tempT) {
+      			t = tempT;
+      			if (tempT < 10000.) {
+      				material = vec3(sin(uTime) * pos,cos(uTime) * pos,tan(uTime) * pos);
+            		color = shadeSphere(V + t * W, spheres[i], material);
+            	}
+      		}
+      }
+
+        color = pow(color, vec3(.45,.45,.45)); // Do Gamma correction.
 	  
-      gl_FragColor = vec4(color, 1.);        // Set opacity to 1.
+        gl_FragColor = vec4(color, 1.);        // Set opacity to 1.
+
+      //sphere = vec4(4. * cos(uTime),4. *sin(uTime),-3.,25.);
+
    }
 </script>
 
