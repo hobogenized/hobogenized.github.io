@@ -178,10 +178,11 @@
       					    pos * pos * sin(uTime),
       					    pos * pos * radius * -1.);
       	currPos = currPos * turbulence(currPos);
+      	currPos = noise(currPos) * currPos;
 
       	spheres[i] = vec4(
       					  currPos,
-						  min(25.,(tan(uTime / 3.) + (uCursor.z * tan(uTime / 5.))) * radius)
+						  min(35.,(tan(uTime / 3.) + (uCursor.z * tan(uTime / 5.))) * radius)
  						 );
 
       }
