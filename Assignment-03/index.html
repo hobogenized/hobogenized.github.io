@@ -172,12 +172,17 @@
       for (int i = 0; i < 4; ++i) {
       	float pos = float(i) + 1.;
 
-      	float radius = 25. / pos;
+      	float radius = 100. / pos;
 
-      	spheres[i] = vec4(pos * pos * cos(uTime),
-      					  pos * pos * sin(uTime),
-      					  pos * pos * radius * -1.,
-      					  (tan(uTime / 3.) + (uCursor.z * tan(uTime / 5.))) * radius);
+      	vec3 currPos = vec3(pos * pos * cos(uTime),
+      					    pos * pos * sin(uTime),
+      					    pos * pos * radius * -1.);
+      	currPos = currPos * turbulence(currPos);
+
+      	spheres[i] = vec4(
+      					  currPos,
+						  min(25.,(tan(uTime / 3.) + (uCursor.z * tan(uTime / 5.))) * radius)
+ 						 );
 
       }
 
@@ -189,9 +194,15 @@
       		if (t > tempT) {
       			t = tempT;
       			if (tempT < 10000.) {
-      				material = vec3(sin(uTime) * pos,cos(uTime) * pos,tan(uTime) * pos);
+      				float currT = uTime / 60.;
+
+      				material = vec3(sin(currT) * pos,
+      					            cos(currT) * pos,
+      					            tan(currT) * pos);
       				material = material * noise(material);
+
             		color = shadeSphere(V + t * W, spheres[i], material);
+            		color = color * noise(color);
             	}
       		}
       }
