@@ -172,40 +172,44 @@
       for (int i = 0; i < 4; ++i) {
       	float pos = float(i) + 1.;
 
+      	float x = pos * pos * cos(uTime);
+      	float y = pos * pos * sin(uTime);
       	float radius = 100. / pos;
+      	radius = radius * radius;
+      	float z = pos * pos * radius * -1.;
 
-      	vec3 currPos = vec3(pos * pos * cos(uTime),
-      					    pos * pos * sin(uTime),
-      					    pos * pos * radius * -1.);
+      	vec3 tempVec = vec3(x,y,z);
+
+      	x = noise(tempVec) * turbulence(tempVec) * x;
+      	y = noise(tempVec) * turbulence(tempVec) * y;
+      	y = noise(tempVec) * y;
+      	z = noise(tempVec) * turbulence(tempVec) * z;
+
+      	vec3 currPos = vec3(x,y,z);
       	currPos = currPos * turbulence(currPos);
       	currPos = noise(currPos) * currPos;
 
-      	spheres[i] = vec4(
-      					  currPos,
-						  min(35.,(tan(uTime / 3.) + (uCursor.z * tan(uTime / 5.))) * radius)
- 						 );
-
+      	spheres[i] = vec4(currPos, min(60.,tan(uTime / 3.) * radius));
       }
 
-      float t = 100000.;
-      int chosenSphere;
+      float t = 10000.;
       for (int i = 0; i < 4; ++i) {
       	    float pos = float(i) + 1.;
       		float tempT = raySphere(V, W, spheres[i]);
-      		if (t > tempT) {
+      		//if (t > tempT) {
       			t = tempT;
-      			if (tempT < 10000.) {
-      				float currT = uTime / 60.;
+      			//if (tempT < 10000.) {
+      				float currT = uTime;
 
       				material = vec3(sin(currT) * pos,
-      					            cos(currT) * pos,
-      					            tan(currT) * pos);
-      				material = material * noise(material);
+      					            cos(currT) * pos * pos,
+      					            tan(currT) * pos * pos * pos);
+      				material = material * noise(material) * fractal(material);
 
             		color = shadeSphere(V + t * W, spheres[i], material);
             		color = color * noise(color);
-            	}
-      		}
+            	//}
+      		//}
       }
 
         color = pow(color, vec3(.45,.45,.45)); // Do Gamma correction.
