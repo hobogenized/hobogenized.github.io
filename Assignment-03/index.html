@@ -189,30 +189,28 @@
       	currPos = currPos * turbulence(currPos);
       	currPos = noise(currPos) * currPos;
 
-      	spheres[i] = vec4(currPos, min(60.,tan(uTime / 3.) * radius));
+      	spheres[i] = vec4(currPos, min(60.,tan(uTime / 4.) * radius));
+      	spheres[i] = turbulence(spheres[i].xyz) * spheres[i];
+      	spheres[i] = turbulence(spheres[i].xyz) * spheres[i];
       }
 
       float t = 10000.;
       for (int i = 0; i < 4; ++i) {
       	    float pos = float(i) + 1.;
       		float tempT = raySphere(V, W, spheres[i]);
-      		//if (t > tempT) {
-      			t = tempT;
-      			//if (tempT < 10000.) {
-      				float currT = uTime;
+  			t = tempT;
+			float currT = uTime;
 
-      				material = vec3(sin(currT) * pos,
-      					            cos(currT) * pos * pos,
-      					            tan(currT) * pos * pos * pos);
-      				material = material * noise(material) * fractal(material);
+			material = vec3(sin(currT) * pos,
+				            cos(currT) * pos * pos,
+				            tan(currT) * pos * pos * pos);
+			material = material * noise(material) * fractal(material) * turbulence(material);
 
-            		color = shadeSphere(V + t * W, spheres[i], material);
-            		color = color * noise(color);
-            	//}
-      		//}
+    		color = shadeSphere(V + t * W, spheres[i], material);
+    		color = color * noise(color) * fractal(color);
       }
 
-        color = pow(color, vec3(.45,.45,.45)); // Do Gamma correction.
+        color = pow(color, vec3(.1,.1,.1)); // Do Gamma correction.
 	  
         gl_FragColor = vec4(color, 1.);        // Set opacity to 1.
 
