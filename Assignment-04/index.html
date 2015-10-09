@@ -84,8 +84,11 @@
 	  return vec2(t1, t2);
    }
 
-   // Compute intersection of a ray with a sphere, if any.  Return t.
-   // If there is no intersection, return 10000.
+   float boolIntersect2(vec3 V, vec3 W, vec4 sphere1, vec4 sphere2) {
+   	vec2 ts1 = bothTs(V, W, sphere1);
+   	vec2 ts2 = bothTs(V, W, sphere2);
+   	return 1.;
+   }
 
    vec3 boolIntersect(vec3 V, vec3 W, vec3 point, vec4 origSphere) {
 
@@ -98,8 +101,11 @@
   	  vec3 center;
 
   	  for (int i = 0; i < 3; ++i) {
-  	  	maxT = max(maxT, ts[i].x);
-  	  	center = spheres[i].xyz;
+  	  	float tmaxT = max(maxT, ts[i].x);
+  	  	if (tmaxT > maxT) {
+  	  		maxT = tmaxT;
+	  	  	center = spheres[i].xyz;
+	  	  }
   	  }
 
   	  float minT = 100000.;
@@ -114,14 +120,27 @@
   	  return point - origSphere.xyz;
    }
 
-   // Diffusely shade a sphere.
+
+
+   vec3 phongReflect(vec3 normal, vec3 E, vec3 dirLight, vec3 sRGB) {
+      vec3 R = (2. * dot(normal, -dirLight) * normal) + dirLight;
+      return sRGB * pow(max(0., dot(E,R)), 1.);
+   }
+
+   vec3 blinnReflect(vec3 normal, vec3 E, vec3 dirLight, vec3 sRGB) {
+      vec3 H = normalize((-dirLight) + E);
+	  vec3 a = sRGB * pow(max(0., dot(normal,H)), 3.);
+	  return a;
+   }
+
+   	// Diffusely shade a sphere.
    //    point is the x,y,z position of the surface point.
    //    sphere is the x,y,z,r definition of the sphere.
    //    material is the r,g,b color of the sphere.
 
-   vec3 shadeSphere(vec3 point, vec4 sphere, vec3 material) {
+   vec3 shadeSphere(vec3 point, vec3 W, vec4 sphere, vec3 material, int typeOfSpecular) {
       vec3 diffuse = vec3(.2, .3, .1);
-      vec3 normal = boolIntersect(vec3(0,0,-1), Ldir,point, sphere);
+      vec3 normal = (point - sphere.xyz) / sphere.w;
 
       // YOU NEED TO COMPUTE COLOR FOR A DIFFUSELY SHADED SPHERE.
 
@@ -130,60 +149,32 @@
 
       vec3 ambient = material / 5.;
 
+      vec3 specular = vec3(0.,0.,0.);
+
+      if (typeOfSpecular == 0) {
+      	specular = Lrgb;
+      }else if (typeOfSpecular == 1) {
+      	specular = phongReflect(normal, W, Ldir, Lrgb);
+      }else {
+      	specular = blinnReflect(normal, W, Ldir, Lrgb);
+      }
+
       // Add mouse light
-      vec3 color = ambient + Lrgb * diffuse * max(0., dot(normal, Ldir));;
+      vec3 color = ambient + specular * diffuse * max(0., dot(normal, Ldir));;
 
       // Add other lights
 
+      
       for (int i = 0; i < 2; ++i) {
-      	color = color + lights[i] * diffuse * max(0., dot(normal, Ldirs[i]));
-      }
-
-      return color;
-   }
-
-   vec3 phongReflect(vec3 point, vec3 E, vec4 sphere, vec3 material) {
-	  vec3 diffuse = vec3(.2, .3, .1);
-      vec3 normal = boolIntersect(vec3(0,0,-1), Ldir,point, sphere);
-
-      vec3 R;
-
-      vec3 sRGB = vec3(0., 0., 0.1);
-      float dotNL, dotERp;
-
-      vec3 aRGB = material / 5.;
-
-      vec3 color = aRGB;
-
-      for (int i = 0; i < 2; ++i) {
-      	dotNL = dot(normal, Ldirs[i]);
-      	R = 2. * dotNL * (normal - Ldirs[i]);
-      	float dotERp = pow(dot(E, R),2.);
-      	color = color + lights[i] * (diffuse * max(0., dot(normal, Ldirs[i])) + sRGB * max(0., dotERp));
-      }
-
-      return color;
-   }
-
-   vec3 blinnReflect(vec3 point, vec3 E, vec4 sphere, vec3 material) {
-	  vec3 diffuse = vec3(.2, .3, .1);
-      vec3 normal = boolIntersect(vec3(0.,0.,100.), Ldir,point, sphere);
-
-      vec3 H;
-
-      vec3 sRGB = vec3(0., 0., 0.1);
-      float dotNL, dotERp;
-
-      vec3 aRGB = material / 5.;
-
-      vec3 color = aRGB;
-
-      for (int i = 0; i < 2; ++i) {
-      	normal = boolIntersect(vec3(0.,0.,100.), Ldirs[i],point, sphere);
-      	dotNL = dot(normal, Ldirs[i]);
-      	H = (normal + H) / 2.;
-      	float dotEH = pow(dot(E, H),6.);
-      	color = color + lights[i] * (diffuse * max(0., dot(normal, Ldirs[i])) + sRGB * max(0., dotEH));
+      	normal = (point - sphere.xyz) / sphere.w;
+      	if (typeOfSpecular == 0) {
+      	  specular = vec3(0.,0.,0.);
+        }else if (typeOfSpecular == 1) {
+      	  specular = vec3(0.,0.,0.);
+        }else {
+      	  specular = blinnReflect(normal, W, Ldirs[i], lights[i]);
+        }
+      	color = color + specular * diffuse * max(0., dot(normal, Ldirs[i]));
       }
 
       return color;
@@ -221,10 +212,10 @@
    void main(void) {
       vec2 c = uCursor.xy;
 
-      Lrgb = vec3(.2,.1,0.);
-      Ldir = normalize(vec3(c.x, c.y, 1. - 2. * dot(c, c)));
+      Lrgb = vec3(.02,.01,0.);
+      Ldir = normalize(vec3(c.x, c.y, 0));//1. - 2. * dot(c, c)));
 
-      lights[0] = vec3(.1, .3, .2);
+      lights[0] = vec3(.02, .03, .05);
       Ldirs[0] = normalize(vec3(sin(uTime), cos(uTime), 0.) * dot(c,c));
 
       lights[1] = vec3(.05,.04,.3);
@@ -254,43 +245,51 @@
 
       }
 
-      float t = 10000., pos, tempT;
+      float t = 10000.,
+            pos,
+            tempT;
       bool shadowed;
+      int chosenSphere;
       for (int i = 0; i < 4; ++i) {
-      	    pos = float(i) + 1.;
       		tempT = raySphere(V, W, spheres[i]);
       		if (t > tempT) {
       			t = tempT;
-      			if (tempT < 10000.) {
-      				material = vec3(sin(uTime) * pos,
-      							    cos(uTime) * pos,
-      							    tan(uTime) * pos);
-      				shadowed = false;
-      				for (int j = 0; j < 4; ++j) {
-				   	  	if (j != i) {
-				   	  		float t = raySphere(V + t * W, spheres[j].xyz, spheres[i]);
-				   	  		if (t > 0. && t < 10000.) {
-				   	  			shadowed = true;
-				   	  		}
-   	  					}
-   	  				}
-   	  				if (shadowed) {
-      					color = material / 5.;
-      				} else {
-      					if (i == 1) {
-      						color = reflect(V + t * W, -W, spheres[i], material);
-      					} else {
-            				color = /*phong*/
-            				    blinnReflect(V + t * W, -W, spheres[i], material);
-            			}
-            		}
-            	}
+      			chosenSphere = i;
+      			pos = float(i) + 1.;
       		}
       }
+      if (t < 10000.) {
+			material = vec3(sin(uTime) * pos,
+							cos(uTime) * pos,
+							tan(uTime) * pos);
+			shadowed = false;
+			/*for (int j = 0; j < 4; ++j) {
+	   	  		if (j != i) {
+	   	  			float t = raySphere(V + t * W, spheres[j].xyz, spheres[i]);
+	   	  			if (t > 0. && t < 10000.) {
+	   	  				shadowed = true;
+	   	  			}
+					}
+				}
+				if (shadowed) {
+				color = material / 5.;
+			} else {*/
+				/*if (i == 5) {
+					color = reflect(V + t * W, -W, spheres[chosenSphere], material);
+				} else {*/
+				for (int i = 0; i < 4; ++i) {
+					if (i == chosenSphere) {
+						// WHY DOES THIS WORK
+    					color = shadeSphere(V + t * W, W, spheres[i], material, 3);
+					}
+				}
+			//}
+		//}
+     }
 
-        color = pow(color, vec3(.45,.45,.45)); // Do Gamma correction.
+     color = pow(color, vec3(.45,.45,.45)); // Do Gamma correction.
 	  
-        gl_FragColor = vec4(color, 1.);        // Set opacity to 1.
+     gl_FragColor = vec4(color, 1.);        // Set opacity to 1.
 
    }
 </script>
