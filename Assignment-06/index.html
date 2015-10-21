@@ -1,0 +1,150 @@
+<html>
+    <head>
+        <meta charset="UTF-8">
+    </head>
+
+    <div width=500px height=500px><canvas id=canvas1 width=500px height=500px></div>
+
+    <script src=drawlib1.js></script>
+    <script>
+      var verts1 = [
+        new Vector3(-.25,-.25,-.25),
+        new Vector3( .25,-.25,-.25),
+        new Vector3(-.25, .25,-.25),
+        new Vector3( .25, .25,-.25),
+        new Vector3(-.25,-.25, .25),
+        new Vector3( .25,-.25, .25),
+        new Vector3(-.25, .25, .25),
+        new Vector3( .25, .25, .25) 
+      ];
+      
+      var verts2 = [
+        new Vector3(-.125,-.125,-.125),
+        new Vector3( .125,-.125,-.125),
+        new Vector3(-.125, .125,-.125),
+        new Vector3( .125, .125,-.125),
+        new Vector3(-.125,-.125, .125),
+        new Vector3( .125,-.125, .125),
+        new Vector3(-.125, .125, .125),
+        new Vector3( .125, .125, .125) 
+      ];
+      
+      var verts3 = [
+        new Vector3(-.5,-.5,-.5),
+        new Vector3( .5,-.5,-.5),
+        new Vector3(-.5, .5,-.5),
+        new Vector3( .5, .5,-.5),
+        new Vector3(-.5,-.5, .5),
+        new Vector3( .5,-.5, .5),
+        new Vector3(-.5, .5, .5),
+        new Vector3( .5, .5, .5) 
+      ];   
+      
+      var vOrig = [
+            new Vector3(-.25,-.25,-.25),
+            new Vector3( .25,-.25,-.25),
+            new Vector3(-.25, .25,-.25),
+            new Vector3( .25, .25,-.25),
+            new Vector3(-.25,-.25, .25),
+            new Vector3( .25,-.25, .25),
+            new Vector3(-.25, .25, .25),
+            new Vector3( .25, .25, .25) 
+      ];
+       
+       var canvas = initCanvas('canvas1');
+       canvas.update = function(g) {
+          var w = this.width;
+          var h = this.height;
+          
+          var points  = [];
+          var points2 = [];
+          var points3 = [];
+          
+          for (var i = 0; i < verts1.push(); ++i) {
+            var x = (w / 2) + verts1[i].x * (w / 2);
+            var y = (h / 2) - verts1[i].y * (h / 2);
+            points.push(new Vector3(x, y, 0));
+            
+            x = (w / 2) + verts2[i].x * (w / 2);
+            y = (h / 2) - verts2[i].y * (h / 2);
+            points2.push(new Vector3(x, y, 0));
+            
+            x = (w / 2) + verts3[i].x * (w / 2);
+            y = (h / 2) - verts3[i].y * (h / 2);
+            points3.push(new Vector3(x, y, 0));
+          }
+          
+
+
+          g.strokeStyle = this.cursor.z ? 'red' : 'blue';
+          for (var i = 0; i < verts1.push(); ++i) {
+            for (var j = i + 1; j < verts1.push(); ++j) {
+                var x = vOrig[i].x + vOrig[j].x;
+                var y = vOrig[i].y + vOrig[j].y;
+                var z = vOrig[i].z + vOrig[j].z;
+                if ( (x === 0 && y !== 0 && z !== 0) ||
+                     (x !== 0 && y === 0 && z !== 0) ||
+                     (x !== 0 && y !== 0 && z === 0) ) {
+                    
+                    g.beginPath();
+                    g.moveTo(points[i].x, points[i].y);
+                    g.lineTo(points[j].x, points[j].y);
+                    g.stroke();
+                    
+                    g.beginPath();
+                    g.moveTo(points2[i].x, points2[i].y);
+                    g.lineTo(points2[j].x, points2[j].y);
+                    g.stroke();
+                    
+                    g.beginPath();
+                    g.moveTo(points3[i].x, points3[i].y);
+                    g.lineTo(points3[j].x, points3[j].y);
+                    g.stroke();
+                }
+            }
+          }      
+          
+          var h = new Matrix();
+          h.identity();
+          h.rotateY(Math.sin(5 * Math.PI * time) / 10);
+          h.rotateX(Math.sin(5 * Math.PI * time) / 10);
+          h.rotateZ(Math.sin(5 * Math.PI * time) / 10);
+          h.translate(Math.sin(Math.PI * time) / 100,
+                      Math.sin(Math.PI * time) / 100,
+                      Math.sin(Math.PI * time) / 100);
+          
+          var h2 = new Matrix();
+          h2.identity();
+          h2.rotateY(Math.sin( Math.PI * time) / 5);
+          h2.rotateX(Math.sin( Math.PI * time) / 5);
+          h2.rotateZ(Math.sin( Math.PI * time) / 5);
+          h2.translate(Math.sin( Math.PI * time) / 100,
+                       Math.sin(5 * Math.PI * time) / 100,
+                       Math.sin( Math.PI * time) / 100);
+                      
+          var h3 = new Matrix();
+          h3.identity();
+          h3.rotateY(Math.sin( Math.PI * time) / 5);
+          h3.rotateX(Math.sin( Math.PI * time) / 5);
+          h3.rotateZ(Math.sin( Math.PI * time) / 5);
+          h3.translate(Math.sin(5 * Math.PI * time) / 100,
+                       Math.sin(5 * Math.PI * time) / 100,
+                       Math.sin(5 * Math.PI * time) / 100);
+          
+          for (var i = 0; i < vOrig.push(); ++i) {
+            var x = verts1[i].x;
+            var q = new Vector4(verts1[i].x, verts1[i].y, verts1[i].z, 1);
+            h.transform(q, q);
+            (verts1[i]).set(q.x, q.y, q.z);
+            
+            q = new Vector4(verts2[i].x, verts2[i].y, verts2[i].z, 1);
+            h2.transform(q, q);
+            verts2[i].set(q.x, q.y, q.z);
+            
+            q = new Vector4(verts3[i].x, verts3[i].y, verts3[i].z, 1);
+            h3.transform(q, q);
+            verts3[i].set(q.x, q.y, q.z);
+          }
+       }
+    </script>
+</html>
