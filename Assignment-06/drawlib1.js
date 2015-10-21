@@ -61,6 +61,7 @@
        this.v1 = new Vector4(0,0,0,0);
        this.v2 = new Vector4(0,0,0,0);
        this.v3 = new Vector4(0,0,0,0);
+       return this;
     }
 
    Matrix.prototype = {
@@ -69,12 +70,14 @@
          if (v1 !== undefined) this.v1 = v1;
          if (v2 !== undefined) this.v2 = v2;
          if (v3 !== undefined) this.v3 = v3;
+         return this;
        },
        identity : function() {
            (this.v0).set(1, 0, 0, 0);
            (this.v1).set(0, 1, 0, 0);
            (this.v2).set(0, 0, 1, 0);
            (this.v3).set(0, 0, 0, 1);
+           return this;
        },
        combine : function(mat2) {
            v0 = multV(this.v0, mat2);
@@ -82,6 +85,7 @@
            v2 = multV(this.v2, mat2);
            v3 = multV(this.v3, mat2);
            this.set(v0, v1, v2, v3);
+           return this;
        },
        translate : function(x, y, z) {
            var i = new Matrix();
@@ -90,6 +94,7 @@
            i.v1.t = y;
            i.v2.t = z;
            this.combine(i);
+           return this;
        },
        rotateX : function(theta) {
            var i = new Matrix();
@@ -99,6 +104,7 @@
            i.v2.y =  Math.sin(theta);
            i.v2.z =  Math.cos(theta);
            this.combine(i);
+           return this;
        },
        rotateY : function(theta) {
            var i = new Matrix();
@@ -108,6 +114,7 @@
            i.v2.x =  Math.sin(theta); 
            i.v2.z =  Math.cos(theta);
            this.combine(i);
+           return this;
        },
        rotateZ : function(theta) {
            var i = new Matrix();
@@ -117,6 +124,7 @@
            i.v1.x =  Math.sin(theta);
            i.v1.y =  Math.cos(theta);
            this.combine(i);
+           return this;
        },
        scale  : function(x, y, z) {
            var i = new Matrix();
@@ -125,6 +133,7 @@
            i.v1.y = y;
            i.v2.z = z;
            this.combine(i);
+           return this;
        },
        transform: function(src, dst) {
            var x = this.v0.dot(src);
@@ -132,6 +141,7 @@
            var z = this.v2.dot(src);
            var t = this.v3.dot(src);
            dst.set(x, y, z, t);
+           return this;
        }
    }
    
