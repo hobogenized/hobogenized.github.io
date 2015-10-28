@@ -36,17 +36,60 @@
       
       var q = new Vector4(0, 0, 0, 0);
 
-      var r = new Vector3(0, 0, 0),
-          s = new Vector3(0, 0, 0),
-          t = new Vector3(0, 0, 0);
-      var w = 0, h = 0;
-      
-      var points  = [];
-
       var i = 0, j = 0;
       var x = 0, y = 0, z = 0;
       var currX = 0.0, currY = 0.0, currZ = 0.0, 
           theta = 0.0, phi = 0.0,  r = .15;
+          
+      var w = 0, h = 0;
+      
+      var points  = [];
+      
+      var cyl = [];
+      
+      for (i = 0.0; i < 1.01; i += 0.05) {
+        for (j = 0.0; j < 1.01; j += 0.05) {
+            theta = 2 * Math.PI * i;
+            currX = Math.sin(theta);
+            currY = 2 * j - 1;
+            currZ = Math.cos(theta);
+            cyl.push(new Vector3(currX, currY, currZ));
+        }
+      }
+      
+      var sph = [];
+
+      for (i = 0.0; i < 1.0; i += 0.05) {
+        for (j = 0.0; j < 1.0; j += 0.05) {
+            theta = 2 * Math.PI * i;
+            phi = Math.PI * j - Math.PI / 2;
+            currX = Math.cos(phi) * Math.sin(theta);
+            currY = Math.sin(phi);
+            currZ = Math.cos(phi) * Math.cos(theta);
+
+            sph.push(new Vector3(currX, currY, currZ));
+        }
+      }
+      
+      var tor = [];
+      
+      for (i = 0.0; i < 1.0; i += 0.05) {
+        for (j = 0.0; j < 1.0; j += 0.05) {
+            theta = 2 * Math.PI * i;
+            phi = 2 * Math.PI * j;
+            currX = (1 + r * Math.cos(phi)) * Math.cos(theta);
+            currY = (1 + r * Math.cos(phi)) * Math.sin(theta);
+            currZ = r * Math.sin(theta);
+
+            tor.push(new Vector3(currX, currY, currZ));
+        }
+      }
+      
+      currX = Math.sin(0);
+      currY = -1;
+      x = viewPortX(w, h, currX);
+      y = viewPortY(w, h, currY);
+      cyl.push(new Vector3(x, y, 0));
           
       function viewPortX(w, h, vX) {
         return (w / 2) + vX * (w / 2);
@@ -63,37 +106,24 @@
           
           points  = [];
           
-          for (i = 0.0; i < 1.01; i += 0.05) {
-            for (j = 0.0; j < 1.01; j += 0.05) {
-                theta = 2 * Math.PI * i;
-                currX = Math.sin(theta);
-                currY = 2 * j - 1;
-                currZ = Math.cos(theta);
-                x = viewPortX(w, h, currX);
-                y = viewPortY(w, h, currY);
-                points.push(new Vector3(x, y, 0));
-            }
+          for (i = 0; i < cyl.push(); ++i) {
+            currX = cyl[i].x;
+            currY = cyl[i].y;
+            
+            x = viewPortX(w, h, currX);
+            y = viewPortY(w, h, currY);
+            points.push(new Vector3(x, y, 0));
           }
-          
-          currX = Math.sin(0);
-          currY = -1;
-          x = viewPortX(w, h, currX);
-          y = viewPortY(w, h, currY);
-          points.push(new Vector3(x, y, 0));
-          
 
           g.strokeStyle = this.cursor.z ? 'red' : 'blue';
           for (i = 0; i < points.push() - 1; ++i) {
-            //for (j = i + 1; j < points.push(); ++j) {
-                    
-                    g.beginPath();
-                    g.moveTo(points[i].x, points[i].y);
-                    g.lineTo(points[i+1].x, points[i+1].y);
-                    g.stroke();
-            //}
+            g.beginPath();
+            g.moveTo(points[i].x, points[i].y);
+            g.lineTo(points[i+1].x, points[i+1].y);
+            g.stroke();
           }
 
-          /*mat.identity()
+          mat.identity()
              .rotateY(Math.sin(5 * Math.PI * time) / 10)
              .rotateX(Math.sin(5 * Math.PI * time) / 10)
              .rotateZ(Math.sin(5 * Math.PI * time) / 10)
@@ -101,12 +131,12 @@
                         Math.sin(    Math.PI * time) / 100,
                         Math.sin(5 * Math.PI * time) / 100);
           
-          for (i = 0; i < vOrig.push(); ++i) {
+          for (i = 0; i < cyl.push(); ++i) {
 
-            q.set(verts1[i].x, verts1[i].y, verts1[i].z, 1);
+            q.set(cyl[i].x, cyl[i].y, cyl[i].z, 1);
             mat.transform(q, q);
-            (verts1[i]).set(q.x, q.y, q.z);
-          }*/
+            (cyl[i]).set(q.x, q.y, q.z);
+          }
        }
        
        var canvas2 = initCanvas('canvas2');
@@ -116,28 +146,36 @@
           
           points  = [];
           
-          for (i = 0.0; i < 1.0; i += 0.05) {
-            for (j = 0.0; j < 1.0; j += 0.05) {
-                theta = 2 * Math.PI * i;
-                phi = Math.PI * j - Math.PI / 2;
-                currX = Math.cos(phi) * Math.sin(theta);
-                currY = Math.sin(phi);
-                currZ = Math.cos(phi) * Math.cos(theta);
-                x = viewPortX(w, h, currX);
-                y = viewPortY(w, h, currY);
-                points.push(new Vector3(x, y, 0));
-            }
+          for (i = 0; i < tor.push(); ++i) {
+            currX = sph[i].x;
+            currY = sph[i].y;
+            
+            x = viewPortX(w, h, currX);
+            y = viewPortY(w, h, currY);
+            points.push(new Vector3(x, y, 0));
           }
 
           g.strokeStyle = this.cursor.z ? 'red' : 'blue';
           for (i = 0; i < points.push() - 1; ++i) {
-            //for (j = i + 1; j < points.push(); ++j) {
-                    
-                    g.beginPath();
-                    g.moveTo(points[i].x, points[i].y);
-                    g.lineTo(points[i+1].x, points[i+1].y);
-                    g.stroke();
-            //}
+            g.beginPath();
+            g.moveTo(points[i].x, points[i].y);
+            g.lineTo(points[i+1].x, points[i+1].y);
+            g.stroke();
+          }
+          
+          mat.identity()
+             .rotateY(Math.sin(5 * Math.PI * time) / 10)
+             .rotateX(Math.sin(5 * Math.PI * time) / 10)
+             .rotateZ(Math.sin(5 * Math.PI * time) / 10)
+             .translate(Math.sin(5 * Math.PI * time) / 100,
+                        Math.sin(    Math.PI * time) / 100,
+                        Math.sin(5 * Math.PI * time) / 100);
+          
+          for (i = 0; i < sph.push(); ++i) {
+
+            q.set(sph[i].x, sph[i].y, sph[i].z, 1);
+            mat.transform(q, q);
+            (sph[i]).set(q.x, q.y, q.z);
           }
        }
        
@@ -148,28 +186,36 @@
           
           points  = [];
           
-          for (i = 0.0; i < 1.0; i += 0.05) {
-            for (j = 0.0; j < 1.0; j += 0.05) {
-                theta = 2 * Math.PI * i;
-                phi = 2 * Math.PI * j;
-                currX = (1 + r * Math.cos(phi)) * Math.cos(theta);
-                currY = (1 + r * Math.cos(phi)) * Math.sin(theta);
-                currZ = r * Math.sin(theta);
-                x = (w / 2) + currX * (w / 2);
-                y = (h / 2) - currY * (h / 2);
-                points.push(new Vector3(x, y, 0));
-            }
+          for (i = 0; i < tor.push(); ++i) {
+            currX = tor[i].x;
+            currY = tor[i].y;
+            
+            x = viewPortX(w, h, currX);
+            y = viewPortY(w, h, currY);
+            points.push(new Vector3(x, y, 0));
           }
 
           g.strokeStyle = this.cursor.z ? 'red' : 'blue';
           for (i = 0; i < points.push() - 1; ++i) {
-            //for (j = i + 1; j < points.push(); ++j) {
-                    
-                    g.beginPath();
-                    g.moveTo(points[i].x, points[i].y);
-                    g.lineTo(points[i+1].x, points[i+1].y);
-                    g.stroke();
-            //}
+            g.beginPath();
+            g.moveTo(points[i].x, points[i].y);
+            g.lineTo(points[i+1].x, points[i+1].y);
+            g.stroke();
+          }
+          
+          mat.identity()
+             .rotateY(Math.sin(5 * Math.PI * time) / 10)
+             .rotateX(Math.sin(5 * Math.PI * time) / 10)
+             .rotateZ(Math.sin(5 * Math.PI * time) / 10)
+             .translate(Math.sin(5 * Math.PI * time) / 100,
+                        Math.sin(    Math.PI * time) / 100,
+                        Math.sin(5 * Math.PI * time) / 100);
+          
+          for (i = 0; i < tor.push(); ++i) {
+
+            q.set(tor[i].x, tor[i].y, tor[i].z, 1);
+            mat.transform(q, q);
+            (tor[i]).set(q.x, q.y, q.z);
           }
        }
     </script>
