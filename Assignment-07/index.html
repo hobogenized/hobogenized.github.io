@@ -1,0 +1,176 @@
+<html>
+    <head>
+        <meta charset="UTF-8">
+    </head>
+
+    <table>
+
+    <tr>
+    <td><canvas id=canvas1 width=300 height=200></td>
+    <td width=50></td>
+    <td valign=top>
+
+    </td>
+    </tr>
+
+    <tr>
+    <td><canvas id=canvas2 width=300 height=200></td>
+    <td width=50></td>
+    <td valign=top>
+    </td>
+    </tr>
+    
+    <tr>
+    <td><canvas id=canvas3 width=300 height=200></td>
+    <td width=50></td>
+    <td valign=top>
+    </td>
+    </tr>
+
+    </table>
+
+    <script src=drawlib1.js></script>
+    <script>
+      
+      var mat  = new Matrix();
+      
+      var q = new Vector4(0, 0, 0, 0);
+
+      var r = new Vector3(0, 0, 0),
+          s = new Vector3(0, 0, 0),
+          t = new Vector3(0, 0, 0);
+      var w = 0, h = 0;
+      
+      var points  = [];
+
+      var i = 0, j = 0;
+      var x = 0, y = 0, z = 0;
+      var currX = 0.0, currY = 0.0, currZ = 0.0, 
+          theta = 0.0, phi = 0.0,  r = .15;
+          
+      function viewPortX(w, h, vX) {
+        return (w / 2) + vX * (w / 2);
+      }
+      
+      function viewPortY(w, h, vY) {
+        return (h / 2) - currY * (h / 2);
+      }
+       
+       var canvas = initCanvas('canvas1');
+       canvas.update = function(g) {
+          w = this.width;
+          h = this.height;
+          
+          points  = [];
+          
+          for (i = 0.0; i < 1.01; i += 0.05) {
+            for (j = 0.0; j < 1.01; j += 0.05) {
+                theta = 2 * Math.PI * i;
+                currX = Math.sin(theta);
+                currY = 2 * j - 1;
+                currZ = Math.cos(theta);
+                x = viewPortX(w, h, currX);
+                y = viewPortY(w, h, currY);
+                points.push(new Vector3(x, y, 0));
+            }
+          }
+          
+          currX = Math.sin(0);
+          currY = -1;
+          x = viewPortX(w, h, currX);
+          y = viewPortY(w, h, currY);
+          points.push(new Vector3(x, y, 0));
+          
+
+          g.strokeStyle = this.cursor.z ? 'red' : 'blue';
+          for (i = 0; i < points.push() - 1; ++i) {
+            //for (j = i + 1; j < points.push(); ++j) {
+                    
+                    g.beginPath();
+                    g.moveTo(points[i].x, points[i].y);
+                    g.lineTo(points[i+1].x, points[i+1].y);
+                    g.stroke();
+            //}
+          }
+
+          /*mat.identity()
+             .rotateY(Math.sin(5 * Math.PI * time) / 10)
+             .rotateX(Math.sin(5 * Math.PI * time) / 10)
+             .rotateZ(Math.sin(5 * Math.PI * time) / 10)
+             .translate(Math.sin(5 * Math.PI * time) / 100,
+                        Math.sin(    Math.PI * time) / 100,
+                        Math.sin(5 * Math.PI * time) / 100);
+          
+          for (i = 0; i < vOrig.push(); ++i) {
+
+            q.set(verts1[i].x, verts1[i].y, verts1[i].z, 1);
+            mat.transform(q, q);
+            (verts1[i]).set(q.x, q.y, q.z);
+          }*/
+       }
+       
+       var canvas2 = initCanvas('canvas2');
+       canvas2.update = function(g) {
+          w = this.width;
+          h = this.height;
+          
+          points  = [];
+          
+          for (i = 0.0; i < 1.0; i += 0.05) {
+            for (j = 0.0; j < 1.0; j += 0.05) {
+                theta = 2 * Math.PI * i;
+                phi = Math.PI * j - Math.PI / 2;
+                currX = Math.cos(phi) * Math.sin(theta);
+                currY = Math.sin(phi);
+                currZ = Math.cos(phi) * Math.cos(theta);
+                x = viewPortX(w, h, currX);
+                y = viewPortY(w, h, currY);
+                points.push(new Vector3(x, y, 0));
+            }
+          }
+
+          g.strokeStyle = this.cursor.z ? 'red' : 'blue';
+          for (i = 0; i < points.push() - 1; ++i) {
+            //for (j = i + 1; j < points.push(); ++j) {
+                    
+                    g.beginPath();
+                    g.moveTo(points[i].x, points[i].y);
+                    g.lineTo(points[i+1].x, points[i+1].y);
+                    g.stroke();
+            //}
+          }
+       }
+       
+       var canvas3 = initCanvas('canvas3');
+       canvas3.update = function(g) {
+          w = this.width;
+          h = this.height;
+          
+          points  = [];
+          
+          for (i = 0.0; i < 1.0; i += 0.05) {
+            for (j = 0.0; j < 1.0; j += 0.05) {
+                theta = 2 * Math.PI * i;
+                phi = 2 * Math.PI * j;
+                currX = (1 + r * Math.cos(phi)) * Math.cos(theta);
+                currY = (1 + r * Math.cos(phi)) * Math.sin(theta);
+                currZ = r * Math.sin(theta);
+                x = (w / 2) + currX * (w / 2);
+                y = (h / 2) - currY * (h / 2);
+                points.push(new Vector3(x, y, 0));
+            }
+          }
+
+          g.strokeStyle = this.cursor.z ? 'red' : 'blue';
+          for (i = 0; i < points.push() - 1; ++i) {
+            //for (j = i + 1; j < points.push(); ++j) {
+                    
+                    g.beginPath();
+                    g.moveTo(points[i].x, points[i].y);
+                    g.lineTo(points[i+1].x, points[i+1].y);
+                    g.stroke();
+            //}
+          }
+       }
+    </script>
+</html>
