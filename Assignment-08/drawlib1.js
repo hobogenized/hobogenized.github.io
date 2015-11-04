@@ -194,11 +194,9 @@
             
             for(var i = 0; i < size; ++i){
                 g.beginPath();
-                var posX = /*viewPortX(w, h,*/ this.positions[i].x;//);
-                var posY = /*viewPortY(w, h,*/ this.positions[i].y;//); 
-                                      
-                //g.arc(posX, posY, 3, 0, Math.PI * 2, false);
-                //g.arc(posX, posY, 3, 0, Math.PI * 2, false);
+                var posX = this.positions[i].x;
+                var posY = this.positions[i].y;; 
+
                 g.stroke();
                 g.closePath();
             }
@@ -208,8 +206,8 @@
             if(size > 0){
                 
                 var toPlot = new Vector3(0, 0, 0);
-                startX = /*viewPortX(w, h,*/ this.positions[0].x;//);
-                startY = /*viewPortY(w, h,*/ this.positions[0].y;//);
+                startX = this.positions[0].x;
+                startY = this.positions[0].y;
                 g.moveTo(startX, startY);
                 for(var i = 1; i < size; ++i){
                     p0 = this.positions[i-1];
@@ -252,8 +250,8 @@
                                    B * t0.z +
                                    C * p1.z +
                                    D * t1.z;
-                        curX = /*viewPortX(w, h,*/ toPlot.x;//);
-                        curY = /*viewPortY(w, h,*/ toPlot.y;//);
+                        curX = toPlot.x;
+                        curY = toPlot.y;
                         g.lineTo(curX, curY);
                     }
                 }
@@ -292,7 +290,7 @@
     
     function updateInput(canvas, e) {
         canvas.onmouseup = function(ev) {
-            mousePos = getMousePos(canvas, ev);
+
         }
     }
    
