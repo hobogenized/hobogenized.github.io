@@ -5,11 +5,21 @@
 
     <table>
 
-    <tr>
-    <td><canvas id=canvas1 width=600 height=600></td>
+    <tr width=800>
+    
+    <td><canvas id=canvas1 width=800 height=600 tabindex='1' style="border:2px solid #FF00FF;"></td>
     <td width=50></td>
     <td valign=top>
-
+        <p>A to add points</p>
+        <p>S to move points</p>
+        <p>D to delete points</p>
+        <p>Q and E to switch between splines</p>
+        <p>W to make new spline</p>
+        <br><br>
+        <div width=20 height=100 style="border:2px solid #FF00FF;">
+        <p>Current mode:</p>
+        <div id="canvas1-mode">Mode</div>
+        </div>
     </td>
     </tr>
 
@@ -33,58 +43,115 @@
     <script>
       
     var mat  = new Matrix();
-    var spl = new HSpline();
   
     var q = new Vector4(0, 0, 0, 0);
     var cursor = new Vector3(0, 0, 0);
       
     var x = 0, y = 0, w = 0, h = 0;
     
-    var points = [];
+    var splines = [[]];
+    var currSpline = 0;
+    var points = splines[currSpline];
     
-    var drawCircle = function (context, x, y/*, fillcolor, radius, linewidth, strokestyle, fontcolor, textalign, fonttype, filltext*/) {
-        context.beginPath();
-        context.arc(x, y, 2, 0, 2 * Math.PI, false);
-        context.fillStyle = 'black';
-        context.fill();
-        context.lineWidth = 1;
-        context.strokeStyle = 'black';
-        context.stroke();
-    };
-    
-    var drawLine = function (context, p1, p2) {
-        context.beginPath();
-        context.moveTo(p1.x, p1.y);
-        context.lineWidth = 0.5;
-        context.strokeStyle = 'black';
-        context.lineTo(p2.x, p2.y);
-        context.stroke();
-    };
+    var spl = new HSpline(points);
    
     var canvas = initCanvas('canvas1');
     var context = canvas.getContext('2d');
+    
     canvas.update = function(g) {
+        if (canvas.newspline) {
+            canvas.newspline = false;
+            if (points.push() > 0) {
+                var neednew = true;
+                for (var index = 0; index < splines.push(); ++index) {
+                    if (splines[index].push() == 0) {
+                        currSpline = index;
+                        neednew = false;
+                        break;
+                    }
+                }
+                if (neednew){
+                    splines.push([]);
+                    currSpline++;
+                }
+            }
+        } else if (canvas.prevspline) {
+            canvas.prevspline = false;
+            if (splines.push() > 1) {
+                if (currSpline == 0) {
+                    currSpline = splines.push() - 1;
+                } else {
+                currSpline--;
+                }
+            }
+        } else if (canvas.nextspline) {
+            canvas.nextspline = false;
+            if (splines.push() > 1) {
+                if (currSpline == splines.push() - 1) {
+                    currSpline = 0;
+                } else {
+                currSpline++;
+                }
+            }
+        }
+        points = splines[currSpline];
+        
         cursor = canvas.cursor;
         w = this.width;
         h = this.height;
         
+        var index = detectPoint(cursor, points);
+        if (index != -1) lastindex = index;
+        
         if (canvas.clicked) {
-            console.log("Mouse press");
-            console.log(cursor.x);
-            console.log(cursor.y);
-            points.push(new Vector3(cursor.x, 
+            
+            switch (canvas.mode){
+                case "Add":
+                    points.push(new Vector3(cursor.x, 
                                     cursor.y,
                                     0));
+                    break;
+                case "Delete":
+                    if (index != -1) {
+                        points.splice(index, 1);
+                    }
+                    break;
+            }
             canvas.clicked = false;
+        } else {
+            if (cursor.z == 1) {
+                switch (canvas.mode){
+                case "Move":
+                    if (lastindex != -1 && lastindex < points.push()) {
+                        points[lastindex].x = cursor.x;
+                        points[lastindex].y = cursor.y;
+                    }
+                    break;
+                }
+            }
         }
         
-        for (var p = 0; p < points.push(); ++p) {
+        for (var s = 0; s < splines.push(); ++s) {
+            var currPoints = splines[s];
+            for (var p = 0; p < currPoints.push(); ++p) {
+                var point = currPoints[p];
+                drawCircle(context, point.x, point.y);
+                if (p < points.push() - 1) {
+                    drawLine(context, points[p], points[p+1]);
+                }
+            }
+            spl.transform(context, currPoints);
+        }
+        /*for (var p = 0; p < points.push(); ++p) {
             var point = points[p];
             drawCircle(context, point.x, point.y);
             if (p < points.push() - 1) {
                 drawLine(context, points[p], points[p+1]);
             }
         }
+        
+        spl.transform(context, points);*/
+        document.getElementById("canvas1-mode").innerHTML = canvas.mode;
     }
     </script>
 </html>

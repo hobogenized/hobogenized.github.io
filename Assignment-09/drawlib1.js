@@ -177,26 +177,26 @@
         return 1.0 - y * 1.0/(h / 2.0);
     }
 
-    function HSpline(){
-        this.positions = [];
+    function HSpline(){;
     };
     
     var w = 300., h = 200.;
 
     HSpline.prototype = {
-        transform : function(g, m) {
+        transform : function(g, positions) {
             var r = 20;
+            var pos = positions;
             
             var p0, p1, t0, t1, 
                 startX, startY,
                 curX, curY;
                 
-            var size = this.positions.length;
+            var size = pos.push();
             
             for(var i = 0; i < size; ++i){
                 g.beginPath();
-                var posX = this.positions[i].x;
-                var posY = this.positions[i].y;; 
+                var posX = pos[i].x,
+                    posY = pos[i].y; 
 
                 g.stroke();
                 g.closePath();
@@ -207,22 +207,22 @@
             if(size > 0){
                 
                 var toPlot = new Vector3(0, 0, 0);
-                startX = this.positions[0].x;
-                startY = this.positions[0].y;
+                startX = pos[0].x;
+                startY = pos[0].y;
                 g.moveTo(startX, startY);
                 for(var i = 1; i < size; ++i){
-                    p0 = this.positions[i-1];
-                    p1 = this.positions[i];
+                    p0 = pos[i-1];
+                    p1 = pos[i];
                     
                     if(i > 1){
-                        t0 = p1.sub(this.positions[i-2]);
+                        t0 = p1.sub(pos[i-2]);
                         t0 = t0.multS(0.7);
                     } else {
                         t0 = p0.sub(p0);
                     }
                     
-                    if(i < size - 1){
-                        t1 = this.positions[i+1].sub(p0);
+                    if(i < size-1){
+                        t1 = pos[i+1].sub(p0);
                         t1 = t1.multS(0.7);
                     } else {
                         t1 = p1.sub(p1);
@@ -259,44 +259,46 @@
             }
             g.stroke();
         },
-        addPoint : function(x, y){
-            this.positions.push(new Vector3(x, 
-                                            y,
-                                            0));
-        },
-        reset : function(){
-            this.positions = [];
-        },
-        detectPoints : function(mousePos){
-            var size = this.positions.length;
-            var offset = 30;
-            for(var i = 0; i < size; i++){
-                var index = i;
-                var coord = pixelCoord(this.positions[i].x, this.positions[i].y);
-                var distX = Math.abs(coord.x - mousePos.x);
-                var distY = Math.abs(coord.y - mousePos.y);
-                if(distX < offset && distY < offset){
-                    return index;
-                }
-            }
-        },
-        movePoints : function(index, mousePos){
-            this.positions[index].x = mousePos.x;
-            this.positions[index].y = mousePos.y;
-        },
-        deletePoints : function(index){
-            this.positions.splice(index, 1);
-        }
     };
-
-    function updateInput(canvas, e) {
-        canvas.onmouseup = function(ev) {
-
+    
+    var drawCircle = function (context, x, y/*, fillcolor, radius, linewidth, strokestyle, fontcolor, textalign, fonttype, filltext*/) {
+        context.beginPath();
+        context.arc(x, y, 2, 0, 2 * Math.PI, false);
+        context.fillStyle = 'black';
+        context.fill();
+        context.lineWidth = 1;
+        context.strokeStyle = 'black';
+        context.stroke();
+    };
+    
+    var drawLine = function (context, p1, p2) {
+        context.beginPath();
+        context.moveTo(p1.x, p1.y);
+        context.lineWidth = 0.5;
+        context.strokeStyle = 'black';
+        context.lineTo(p2.x, p2.y);
+        context.stroke();
+    };
+    
+    var detectPoint = function(cursor, points){
+        var size = points.push();
+        var offset = 3;
+        for(var i = 0; i < size; i++){
+            var index = i;
+            var coordX = points[i].x;
+            var coordY = points[i].y;
+            var distX = Math.abs(coordX - cursor.x);
+            var distY = Math.abs(coordY - cursor.y);
+            if(distX < offset && distY < offset){
+                return index;
+            }
         }
-    }
+        return -1;
+    };
 
     var startTime = (new Date()).getTime() / 1000, time = startTime;
     var canvases = [];
+    
     function initCanvas(id) {
       var canvas = document.getElementById(id);
       canvas.setCursor = function(x, y, z) {
@@ -304,11 +306,47 @@
          this.cursor.set(x - r.left, y - r.top, z);
       }
       canvas.clicked = false;
+      canvas.newspline = false;
+      canvas.prevspline = false;
+      canvas.nextspline = false;
+      canvas.mode = "Add";
       canvas.cursor = new Vector3(0, 0, 0);
       canvas.onmousedown = function(e) { this.setCursor(e.clientX, e.clientY, 1); }
       canvas.onmousemove = function(e) { this.setCursor(e.clientX, e.clientY   ); }
+      
       canvas.onmouseup   = function(e) { this.setCursor(e.clientX, e.clientY, 0); 
                                          this.clicked = true;}
+      canvas.addEventListener('keydown', function(e){
+            var key = e.keyCode;;
+            switch(key){
+                case 65: // 'A' key
+                    canvas.mode = "Add";
+                    break;
+                case 83: // 'S' key
+                    canvas.mode = "Move";
+                    break;
+                case 68: // 'D' key
+                    canvas.mode = "Delete";
+                    break;
+                case 87: // 'W' key
+                    canvas.newspline = true;
+                    break;
+                case 81: // 'Q' key
+                    canvas.prevspline = true;
+                    break;
+                case 69: // 'E' key
+                    canvas.nextspline = true;
+                    break;
+            }
+            console.log(canvas.mode);
+      }, false);
+      var context = canvas.getContext('2d');
+      context.globalCompositeOperation = "source-over";
+      context.lineWidth = 2;
+      context.strokeStyle = "black";
+      context.rect(0, 0, canvas.width - 1, canvas.height - 1);
+      context.stroke();
+      
       canvases.push(canvas);
       return canvas;
     }
