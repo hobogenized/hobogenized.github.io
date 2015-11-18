@@ -1,0 +1,209 @@
+<div id=torus>
+Click for Torus
+<canvas id=canvas1 width=640 height=480></canvas>
+</div>
+<div id=sphere>
+Click for Sphere
+<canvas id=canvas2 width=640 height=480></canvas>
+</div>
+<script>
+var gl, prog, prog1;
+var pi = 3.1415926535897932384626433832795;
+function draw() {
+   gl = document.getElementById('canvas1').getContext('experimental-webgl');
+   gl.enable(gl.DEPTH_TEST);
+   gl.depthFunc(gl.LEQUAL);
+   prog = gl.createProgram();
+   prog1 = gl.createProgram();
+   function addShader(type, str) {
+      var s = gl.createShader(type);
+      gl.shaderSource(s, str);
+      gl.compileShader(s);
+      gl.attachShader(prog, s);
+      gl.attachShader(prog1, s);
+   }
+   addShader(gl.VERTEX_SHADER, [
+      ,'attribute vec3 aPos;'
+      ,'uniform mat4 uMatrix;'
+      ,'varying vec3 uPos;'
+      ,'void main() {'
+      ,'   uPos = aPos;'
+      ,'   gl_Position = uMatrix * vec4(aPos, 1.);'
+      ,'}',
+      ].join('\n')
+   );
+   addShader(gl.FRAGMENT_SHADER, [
+      ,'precision highp float;'
+      ,'varying vec3 uPos;'
+      ,'void main() {'
+      ,'   gl_FragColor = vec4(vec3(0.,1.,1.) * (uPos.z < .5 ? uPos.z == -.5 ? .2 : .5 : 1.), 1.);'
+      ,'}',
+      ].join('\n')
+   );
+   var sphereVs = [],
+       torusVs = [];
+   function address(name) { return gl.getUniformLocation(prog, name); }
+   var theta = 0, phi = 0, radius = 0,
+       x = 0, y = 0, z= 0;
+   var uCoords = 64, vCoords = 64;
+   
+   var formSphereStrips = function(u, uCoords, v, vCoords, radius, verts){
+        var theta = 2 * pi * u / uCoords,
+            phi = pi * (v / vCoords) - (pi / 2);
+        var x = Math.cos(phi) * Math.cos(theta) * radius,
+            y = Math.cos(phi) * Math.sin(theta) * radius,
+            z = Math.sin(phi) * radius;
+        verts.push(x);
+        verts.push(y);
+        verts.push(z);
+   }
+   
+   var formTorusStrips = function(u, uCoords, v, vCoords, radius, size, verts){
+        var theta = 2 * pi * u / uCoords,
+            phi   = 2 * pi * (v / vCoords);
+        var x = (1 + radius * Math.cos(phi)) * Math.cos(theta),
+            y = (1 + radius * Math.cos(phi)) * Math.sin(theta),
+            z = radius * Math.sin(phi);
+        verts.push(x * size);
+        verts.push(y * size);
+        verts.push(z * size);
+   }
+   
+   for(var v = 0; v < vCoords; ++v){
+        for(var u = 0; u < uCoords; ++u){
+            formTorusStrips(u, uCoords, v, vCoords, 0.5, 0.5, torusVs);
+            formTorusStrips(u, uCoords, v+1, vCoords, 0.5, 0.5, torusVs);
+            formTorusStrips(u+1, uCoords, v, vCoords, 0.5, 0.5, torusVs);
+            formTorusStrips(u, uCoords, v+1, vCoords, 0.5, 0.5, torusVs);
+            formTorusStrips(u+1, uCoords, v+1, vCoords, 0.5, 0.5, torusVs);
+        }
+    }
+   
+   gl.linkProgram(prog);
+   gl.bindBuffer(gl.ARRAY_BUFFER, gl.createBuffer());
+   gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(torusVs), gl.STATIC_DRAW);
+   var attr = gl.getAttribLocation(prog, 'aPos');
+   gl.enableVertexAttribArray(attr);
+   gl.vertexAttribPointer(attr, 3, gl.FLOAT, false, 0, 0);
+   gl.useProgram(prog);
+
+   setInterval(tick, 1000 / 60);
+
+   function tick() {
+      var turn = (new Date()).getTime() / 1000.;
+      var cos = Math.cos(turn);
+      var sin = Math.sin(turn);
+      var adjust = gl.canvas.height / gl.canvas.width;
+      var matrix = [ adjust*cos,  0,sin, .1*sin,
+                              0,  1,  0,  0,
+                    -adjust*sin,  0,cos, .1*cos,
+                              0,  0,  0,  1];
+      gl.uniformMatrix4fv(address('uMatrix'), false, matrix);
+      gl.drawArrays(gl.TRIANGLE_STRIP, 0, torusVs.length / 3);
+   }
+}
+
+function draw2() {
+   gl = document.getElementById('canvas2').getContext('experimental-webgl');
+   gl.enable(gl.DEPTH_TEST);
+   gl.depthFunc(gl.LEQUAL);
+   prog = gl.createProgram();
+   prog1 = gl.createProgram();
+   function addShader(type, str) {
+      var s = gl.createShader(type);
+      gl.shaderSource(s, str);
+      gl.compileShader(s);
+      gl.attachShader(prog, s);
+      gl.attachShader(prog1, s);
+   }
+   addShader(gl.VERTEX_SHADER, [
+      ,'attribute vec3 aPos;'
+      ,'uniform mat4 uMatrix;'
+      ,'varying vec3 uPos;'
+      ,'void main() {'
+      ,'   uPos = aPos;'
+      ,'   gl_Position = uMatrix * vec4(aPos, 1.);'
+      ,'}',
+      ].join('\n')
+   );
+   addShader(gl.FRAGMENT_SHADER, [
+      ,'precision highp float;'
+      ,'varying vec3 uPos;'
+      ,'void main() {'
+      ,'   gl_FragColor = vec4(vec3(0.,1.,1.) * (uPos.z < .5 ? uPos.z == -.5 ? .2 : .5 : 1.), 1.);'
+      ,'}',
+      ].join('\n')
+   );
+   var sphereVs = [],
+       torusVs = [];
+   function address(name) { return gl.getUniformLocation(prog, name); }
+   var theta = 0, phi = 0, radius = 0,
+       x = 0, y = 0, z= 0;
+   var uCoords = 64, vCoords = 64;
+   
+   var formSphereStrips = function(u, uCoords, v, vCoords, radius, verts){
+        var theta = 2 * pi * u / uCoords,
+            phi = pi * (v / vCoords) - (pi / 2);
+        var x = Math.cos(phi) * Math.cos(theta) * radius,
+            y = Math.cos(phi) * Math.sin(theta) * radius,
+            z = Math.sin(phi) * radius;
+        verts.push(x);
+        verts.push(y);
+        verts.push(z);
+   }
+   
+   var formTorusStrips = function(u, uCoords, v, vCoords, radius, size, verts){
+        var theta = 2 * pi * u / uCoords,
+            phi   = 2 * pi * (v / vCoords);
+        var x = (1 + radius * Math.cos(phi)) * Math.cos(theta),
+            y = (1 + radius * Math.cos(phi)) * Math.sin(theta),
+            z = radius * Math.sin(phi);
+        verts.push(x * size);
+        verts.push(y * size);
+        verts.push(z * size);
+   }
+   
+   for(var v = 0; v < vCoords; ++v){
+        for(var u = 0; u < uCoords; ++u){
+            
+            formSphereStrips(u, uCoords, v, vCoords, 0.8, sphereVs);
+            formSphereStrips(u, uCoords, v+1, vCoords, 0.8, sphereVs);
+            formSphereStrips(u+1, uCoords, v, vCoords, 0.8, sphereVs);
+            formSphereStrips(u, uCoords, v+1, vCoords, 0.8, sphereVs);
+            formSphereStrips(u+1, uCoords, v+1, vCoords, 0.8, sphereVs);
+        }
+    }
+   
+   gl.linkProgram(prog);
+   gl.bindBuffer(gl.ARRAY_BUFFER, gl.createBuffer());
+   gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(sphereVs), gl.STATIC_DRAW);
+   var attr = gl.getAttribLocation(prog, 'aPos');
+   gl.enableVertexAttribArray(attr);
+   gl.vertexAttribPointer(attr, 3, gl.FLOAT, false, 0, 0);
+   gl.useProgram(prog);
+
+   setInterval(tick, 1000 / 60);
+
+   function tick() {
+      var turn = (new Date()).getTime() / 1000.;
+      var cos = Math.cos(turn);
+      var sin = Math.sin(turn);
+      var adjust = gl.canvas.height / gl.canvas.width;
+      var matrix = [ adjust*cos,  0,sin, .1*sin,
+                              0,  1,  0,  0,
+                    -adjust*sin,  0,cos, .1*cos,
+                              0,  0,  0,  1];
+      gl.uniformMatrix4fv(address('uMatrix'), false, matrix);
+      gl.drawArrays(gl.TRIANGLE_STRIP, 0, sphereVs.length / 3);
+   }
+}
+
+var d = new Date();
+var n = d.getTime();
+
+
+document.getElementById('torus').onclick = function() {setTimeout(draw, 100);}
+
+document.getElementById('sphere').onclick = function() {setTimeout(draw2, 100);}
+
+</script>
