@@ -59,6 +59,30 @@
       
       var sph = [];
 
+   var formSphereStrips = function(u, uCoords, v, vCoords, radius, verts){
+        var theta = 2 * Math.PI * u / uCoords,
+            phi = Math.PI * (v / vCoords) - (Math.PI / 2);
+        var x = Math.cos(phi) * Math.cos(theta) * radius,
+            y = Math.cos(phi) * Math.sin(theta) * radius,
+            z = Math.sin(phi) * radius;
+        verts.push(new Vector3(x, y, z));
+		/*verts.push(x);
+        verts.push(y);
+        verts.push(z);*/
+   }
+   
+   var vCoords = 30., uCoords = 40.;
+   
+    for(var v = 0; v < vCoords; ++v){
+        for(var u = 0; u < uCoords; ++u){
+            formSphereStrips(u, uCoords, v, vCoords, 6.0, sph);
+            formSphereStrips(u, uCoords, v+1, vCoords, 6.0, sph);
+            formSphereStrips(u+1, uCoords, v, vCoords, 6.0, sph);
+            formSphereStrips(u, uCoords, v+1, vCoords, 6.0, sph);
+            formSphereStrips(u+1, uCoords, v+1, vCoords, 6.0, sph);
+        }
+    }
+	  /*
       for (i = 0.0; i < 1.0; i += 0.05) {
         for (j = 0.0; j < 1.0; j += 0.05) {
             theta = 2 * Math.PI * i;
@@ -69,7 +93,7 @@
 
             sph.push(new Vector3(currX, currY, currZ));
         }
-      }
+      }*/
       
       var tor = [];
       
@@ -165,7 +189,7 @@
           
           mat.identity()
              .rotateY(Math.sin(5 * Math.PI * time) / 10)
-             .rotateX(Math.sin(5 * Math.PI * time) - 10)
+             
              .rotateZ(Math.sin(5 * Math.PI * time) / 10)
              .translate(Math.sin(5 * Math.PI * time) / 100,
                         Math.sin(    Math.PI * time) / 100,
