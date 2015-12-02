@@ -1,10 +1,11 @@
+<!DOCTYPE html>
 <script src=../lib1.js></script>
 
-<body bgcolor=black>
-<center>
-<td><canvas id='canvas1' width=400 height=400></canvas></td>
-</center>
-</body>
+<body>
+<div>
+<canvas id='canvas1' width=800 height=800></canvas>
+</div>
+
 
 <script id='my_vertex_shader' type='x-shader/x-vertex'>
    attribute vec3 aPosition;
@@ -147,15 +148,14 @@
 
 
 
-   vec3 phongReflect(vec3 normal, vec3 E, vec3 dirLight, vec3 sRGB) {
+   vec3 phongReflect(vec3 normal, vec3 E, vec3 dirLight, vec3 sRGB, float power) {
       vec3 R = (2. * dot(normal, -dirLight) * normal) + dirLight;
-      return sRGB * pow(max(0., dot(E,R)), 1.);
+      return sRGB * pow(max(0., dot(E,R)), power);
    }
 
-   vec3 blinnReflect(vec3 normal, vec3 E, vec3 dirLight, vec3 sRGB) {
+   vec3 blinnReflect(vec3 normal, vec3 E, vec3 dirLight, vec3 sRGB, float power) {
       vec3 H = normalize((-dirLight) + E);
-	  vec3 a = sRGB * pow(max(0., dot(normal,H)), 3.);
-	  return a;
+	  return sRGB * pow(max(0., dot(normal,H)), power);
    }
 
    // Diffusely shade a sphere.
@@ -164,7 +164,7 @@
    //    material is the r,g,b color of the sphere.
 
    vec3 shadeSphere(vec3 V, vec3 point, vec3 W, vec4 sphere, vec3 material, int typeOfSpecular) {
-      vec3 diffuse = vec3(.2, .3, .1);
+      vec3 diffuse = vec3(.02, .03, .1);
       
       vec3 normal = (point - sphere.xyz) / sphere.w;
       
@@ -177,13 +177,15 @@
       vec3 ambient = material / 5.;
 
       vec3 specular = vec3(0.,0.,0.);
+	  
+	  float power = 30.;
 
       if (typeOfSpecular == 0) {
       	specular = Lrgb;
       }else if (typeOfSpecular == 1) {
-      	specular = phongReflect(normal, W, Ldir, Lrgb);
+      	specular = phongReflect(normal, -W, Ldir, Lrgb, power);
       }else {
-      	specular = blinnReflect(normal, W, Ldir, Lrgb);
+      	specular = blinnReflect(normal, -W, Ldir, Lrgb, power * 3.);
       }
 
       // Add mouse light
@@ -209,12 +211,13 @@
       vec3 Wp = 2. * dotNE * (normal - E);
       vec3 Vp = point + 0.001 * Wp;
 
+	  /*
       for (int i = 0; i < 2; ++i) {
       	dotNL = dot(normal, Ldirs[i]);
       	R = 2. * dotNL * (normal - Ldirs[i]);
       	float dotERp = pow(dot(E, R),2.);
       	color = color + lights[i] * (diffuse * max(0., dot(normal, Ldirs[i])) + sRGB * max(0., dotERp));
-      }
+      }*/
 
       color = color + Vp;
 
@@ -224,8 +227,8 @@
    void main(void) {
       vec2 c = uCursor.xy;
 
-      Lrgb = vec3(.02,.01,0.);
-      Ldir = normalize(vec3(c.x, c.y, 0));//1. - 2. * dot(c, c)));
+      Lrgb = vec3(1.0,.5,0.);
+      Ldir = normalize(vec3(c.x, c.y, 1. - 2. * dot(c, c)));
 
       lights[0]  = vec3(.02, .03, .05);
       Ldirs[0]   = normalize(vec3(sin(uTime), cos(uTime), 0.) * dot(c,c));
@@ -238,8 +241,8 @@
       // YOU NEED TO COMPUTE V AND W TO CREATE THE RAY FOR THIS PIXEL,
       // USING vPosition.x AND vPosition.y.
 
-      vec3 V = vec3(0.,0.,100.);
-      vec3 W = normalize(vec3(vPosition.x, vPosition.y, 3.));
+      vec3 V = vec3(10.,10.,100.);
+      vec3 W = normalize(vec3(vPosition.x, vPosition.y, 1.));
 
       // YOU NEED TO SET r,g,b FOR material.
       vec3 color = vec3(0., 0., 0.);
@@ -273,16 +276,19 @@
       		}
       }
       if (t < 10000.) {
-			material = vec3(sin(uTime) * pos,
+	  
+			material = vec3(0.5, 0.5, 0.5);
+			
+			/*material = vec3(sin(uTime) * pos,
 							cos(uTime) * pos,
-							tan(uTime) * pos);
+							tan(uTime) * pos);*/
 
-		t = boolIntersect2(V, W, spheres[0], spheres[1]);
+		//t = boolIntersect2(V, W, spheres[0], spheres[1]);
 
 		for (int i = 0; i < 2; ++i) {
 			if (i == chosenSphere) {
 				// WHY DOES THIS WORK
-				color = shadeSphere(V, V + t * W, W, spheres[i], material, 3);
+				color = shadeSphere(V, V + t * W, W, spheres[i], material, 1);
 				break;
 			}
 		}
@@ -300,4 +306,4 @@
 start_gl('canvas1', document.getElementById('my_vertex_shader'  ).innerHTML,
                     document.getElementById('my_fragment_shader').innerHTML);
 </script>
-
+</body>
