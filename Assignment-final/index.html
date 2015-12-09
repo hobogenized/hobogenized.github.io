@@ -29,7 +29,7 @@
 		window.scene = new CT.Scene(canvas1);
 		scene.setLight(0, [1,1,1]);
 
-		window.obj = new CT.Node().scale(.13);
+		window.obj = new CT.Node().scale(.01);
 		scene.add(obj);
 		
 		var obj1 = new CT.Node();
@@ -130,7 +130,7 @@
 	function update() {
 		for (var i = 0 ; i < obj.numChildren() ; i++) {
 		  var currObj = obj.getChild(i);
-		  currObj.translate(0, 1, 1);
+		  currObj.translate(Math.sin(Math.PI * time - (Math.PI * time / 2)), 0, 0);
 		  for (var j =0; j < currObj.numChildren(); ++j) {
 			currObj.getChild(j).identity().translate(4*(j%4)-6, j<4?2:-2, 0).rotateY(time).rotateX(time/2);
 		  }
