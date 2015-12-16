@@ -17,11 +17,9 @@
 	var transf = [];
 	
 	var mouseDown = false;
-	var prevMouseX = null,
-	    prevMouseY = null;
 		
-	var mouseX = 0,
-	    mouseY = 0;
+	var deltaMouseX = 0,
+	    deltaMouseY = 0;
 
 	function init() {
 		var sin = Math.sin, cos = Math.cos, PI = Math.PI;
@@ -32,6 +30,7 @@
 		window.obj = new CT.Node().scale(.01);
 		scene.add(obj);
 		
+		/*
 		var obj1 = new CT.Node();
 		obj.addChild(obj1);
 
@@ -45,24 +44,33 @@
 		  ,'void main() { vec3 n = normalize(vNormal); gl_FragColor = vec4(n*n,1.); }'
 		  ].join('\n')
 		);
+		//*/
 		
 		var obj2 = new CT.Node();
 		obj.addChild(obj2);
 
+		var sphere = new CT.Sphere(128, 128);
+		obj2.addChild(sphere);
+		obj2.getChild(0).setTexture('images/sun.png');
+		
+		/*
 		obj2.addChild(new CT.Extruded(16,100,
 					function(u,v){ v=.30-.06*cos(2*PI*v); u*=4*PI; return [v*cos(u),v*sin(u)] },          // PROFILE
 					function(v){v*=4*PI;var r=1-cos(1.5*v)/5;return[sin(1.5*v)/2,r*cos(v),r*sin(v)];})); // PATH
 		obj2.getChild(0).setColor([1,0,0]);
+		
 
 		obj2.addChild(new CT.Parametric(20,20,function(u,v){return [2*u-1, 2*v-1, sin(1+10*u)*sin(1+10*v)/4];}));
 		obj2.getChild(1).setColor([0,1,1]);
 
 		obj2.addChild(new CT.Revolved(16, 8, function(t) { return [sin(PI * 5 * t), 2*t-1]; } ));
 		obj2.getChild(2).setColor([0,1,0]);
+		//*/
 		
 		var obj3 = new CT.Node();
 		obj.addChild(obj3);
 
+		/*
 		obj3.addChild(new CT.Sphere(16, 8));
 		obj3.getChild(0).setColor([1,1,1]).setTexture('images/brick.png');
 
@@ -73,6 +81,13 @@
 		obj3.getChild(2).setPhong([.1,.04,.01, 1,.4,.1, .2,.2,.2,5])
 						   .setTexture('images/This_is_not_a_bagel.jpg')
 						   .setNormalMap('images/normal_map_2.jpg');
+		//*/
+						
+		var tube = new CT.Revolved(20, 16, function(t) { return[sin(t * PI / 2) - 10, cos(t * 2 + 1) - 20];});	   
+		var obj4 = new CT.Node();
+		obj.addChild(obj4);
+		obj4.addChild(tube);
+		
 						   
 		viewHalfX = window.innerWidth / 2;
 		viewHalfY = window.innerHeight / 2;
@@ -95,51 +110,57 @@
 	function handleKeys() {
 		var k = pressedKeys;
 		if (k[87]) {
-			translZ += 0.5;//console.log("W pressed");
+			translZ += 1;//console.log("W pressed");
 		}
 		if (k[65]) {
-			translX += 0.5;//console.log("A pressed");
+			translX += 1;//console.log("A pressed");
 		}
 		if (k[83]) {
-			translZ -= 0.5;//console.log("S pressed");
+			translZ -= 1;//console.log("S pressed");
 		}
 		if (k[68]) {
-			translX -= 0.5;//console.log("D pressed");
+			translX -= 1;//console.log("D pressed");
 		}
 	}
 	
 	function handleMouseDown(e) {
-	
+		mouseDown = true;
 	}
 	
 	function handleMouseUp(e) {
-	
+		mouseDown = false;
 	}
 	
 	function handleMouseMove(e) {
-		mouseX = e.pageX - viewHalfX;
-		mouseY = e.pageY - viewHalfY;
+		deltaMouseX = e.movementX;
+		deltaMouseY = e.movementY;
 	}
 
 	function resetProperties() {
 		translX = 0;
 		translY = 0;
 		translZ = 0;
+		deltaMouseX = 0;
+		deltaMouseY = 0;
 	}
 
 	function update() {
 		for (var i = 0 ; i < obj.numChildren() ; i++) {
 		  var currObj = obj.getChild(i);
-		  currObj.translate(Math.sin(Math.PI * time - (Math.PI * time / 2)), 0, 0);
+		  //currObj.translate(Math.sin(Math.PI * time - (Math.PI * time / 2)), 0, 0);
 		  for (var j =0; j < currObj.numChildren(); ++j) {
 			currObj.getChild(j).identity().translate(4*(j%4)-6, j<4?2:-2, 0).rotateY(time).rotateX(time/2);
 		  }
 		}
 		obj.draw();
-		resetProperties();
 		handleKeys();
-		obj.translate(translX, translY, translZ);
-		//console.log("Mouse x: " + mouseX + ", Mouse y: " + mouseY);
+		obj.translate(translX, translY, translZ)
+		   .rotateY(deltaMouseX * Math.PI / 180)
+		   .rotateZ(deltaMouseY * Math.PI / 180);
+		if (mouseDown) {
+			obj.scale(1.1, 1.1, 1.1);
+		}
+		//resetProperties();
 	}
 
 	setTimeout(function() {
