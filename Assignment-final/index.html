@@ -1,25 +1,54 @@
 <!DOCTYPE HTML>
 <head>
 	<title>Final Graphics Project</title>
+	 <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.3/jquery.min.js"></script>
+	<script src=CT_Modeler.js></script>
 </head>
-<body>
+<body style="background:white;">
 
-<script src=CT_Modeler.js></script>
+
 <script>
-
-	var viewHalfX = null,
-	    viewHalfY = null;
-
 	var pressedKeys = {};
+
 	var translX = 0,
 	    translY = 0,
 		translZ = 0;
-	var transf = [];
 	
-	var mouseDown = false;
+	var mouseDown = false,
+		growBigger = false,
+		shrinkSmaller = false;
 		
 	var deltaMouseX = 0,
 	    deltaMouseY = 0;
+	
+	var scaleFactor = 2,
+		mouseScale = 3;
+
+	var worldTransform = CT.matrixIdentity();
+	
+	var camera;
+	
+    // called when the pointer lock has changed. Here we check whether the
+    // pointerlock was initiated on the element we want.
+    function changeCallback(e) {
+		(function($){
+        var canvas = $("#pointerLock").get()[0];
+		 })(jQuery); 
+        if (document.pointerLockElement === canvas ||
+                document.mozPointerLockElement === canvas ||
+                document.webkitPointerLockElement === canvas) {
+ 
+            // we've got a pointerlock for our element, add a mouselistener
+            document.addEventListener("mousemove", moveCallback, false);
+        } else {
+ 
+            // pointer lock is no longer active, remove the callback
+            document.removeEventListener("mousemove", moveCallback, false);
+ 
+            // and reset the entry coordinates
+            entryCoordinates = {x:-1, y:-1};
+        }
+    };
 
 	function init() {
 		var sin = Math.sin, cos = Math.cos, PI = Math.PI;
@@ -27,7 +56,7 @@
 		window.scene = new CT.Scene(canvas1);
 		scene.setLight(0, [1,1,1]);
 
-		window.obj = new CT.Node().scale(.01);
+		window.obj = new CT.Node().scale(.1);
 		scene.add(obj);
 		
 		/*
@@ -88,15 +117,28 @@
 		obj.addChild(obj4);
 		obj4.addChild(tube);
 		
-						   
-		viewHalfX = window.innerWidth / 2;
-		viewHalfY = window.innerHeight / 2;
-		
 		document.onkeydown = handleKeyDown;
 		document.onkeyup = handleKeyUp;
 		canvas1.onmousedown = handleMouseDown;
         document.onmouseup = handleMouseUp;
         document.onmousemove   = handleMouseMove;
+		
+		var elem = document.getElementById("canvas1");
+		elem.requestPointerLock = elem.requestPointerLock ||
+									 elem.mozRequestPointerLock ||
+                                     elem.webkitRequestPointerLock;
+
+		elem.requestPointerLock();
+		
+		document.exitPointerLock = document.exitPointerLock ||
+			   document.mozExitPointerLock ||
+			   document.webkitExitPointerLock;
+		document.exitPointerLock();
+		
+		// Hook pointer lock state change events
+		document.addEventListener('pointerlockchange', changeCallback, false);
+		document.addEventListener('mozpointerlockchange', changeCallback, false);
+		document.addEventListener('webkitpointerlockchange', changeCallback, false);
 	}
 	
 	function handleKeyDown(e) {
@@ -109,31 +151,96 @@
 	
 	function handleKeys() {
 		var k = pressedKeys;
+		if (k[81]) {
+			growBigger = true; //console.log("Q pressed");
+		}
 		if (k[87]) {
-			translZ += 1;//console.log("W pressed");
+			translZ -= 0.2;//console.log("W pressed");
 		}
 		if (k[65]) {
-			translX += 1;//console.log("A pressed");
+			translX -= 0.2;//console.log("A pressed");
 		}
 		if (k[83]) {
-			translZ -= 1;//console.log("S pressed");
+			translZ += 0.2;//console.log("S pressed");
 		}
 		if (k[68]) {
-			translX -= 1;//console.log("D pressed");
+			translX += 0.2;//console.log("D pressed");
+		}
+		if (k[69]) {
+			shrinkSmaller = true; // console.log("E pressed");
 		}
 	}
-	
+
 	function handleMouseDown(e) {
 		mouseDown = true;
 	}
-	
+
 	function handleMouseUp(e) {
 		mouseDown = false;
 	}
-	
+
 	function handleMouseMove(e) {
 		deltaMouseX = e.movementX;
 		deltaMouseY = e.movementY;
+	}
+
+	//CONVERTS DEGREES TO RADIANS	
+	function degreesToRadians(degrees) {
+		return degrees * Math.PI / 180;
+	}
+
+	//RETURNS DEGREES TO ROTATE CORRESPONDING TO HORIZONTAL MOUSE MOVEMENT
+	function getDeltaMouseX() {
+		return degreesToRadians(-deltaMouseX / mouseScale);
+	}
+
+	//RETURNS DEGREES TO ROTATE CORRESPONDING TO VERTICAL MOUSE MOVEMENT
+	function getDeltaMouseY() {
+		return degreesToRadians(-deltaMouseY / mouseScale);
+	}
+
+	//RETURNS SCALE FOR SCALING OBJECTS
+	function getScale() {
+		if (growBigger) {
+			return scaleFactor;
+		}
+		if (shrinkSmaller) {
+			return 1 / scaleFactor;
+		}
+		return 1;
+	}
+
+	//HANDLES ALL I/O MOVEMENT VIA MOUSE AND KEYBOARD
+	function handleMovement() {
+		camera = scene._viewMatrix;
+		//SET HORIZONTAL MOUSE ROTATION
+		worldTransform = CT.matrixRotatedY(getDeltaMouseX());
+		//SET VERTICAL MOUSE ROTATION
+		worldTransform = CT.matrixMultiply(worldTransform, 
+										   CT.matrixRotatedX(getDeltaMouseY()),
+										   []);
+		//SET FORWARD/BACKWARD AND LEFT/RIGHT MOVEMENT
+		worldTransform = CT.matrixMultiply(worldTransform,
+										   CT.matrixTranslated(translX, translY, translZ),
+										   []);
+		//APPLY WORLD TRANSFORM
+		camera = CT.matrixMultiply(camera, worldTransform, []);
+		scene.setViewMatrix(camera);
+	}
+
+	function objectDraw() {
+		for (var i = 0 ; i < obj.numChildren() ; i++) {
+			var currObj = obj.getChild(i);
+			//currObj.translate(Math.sin(Math.PI * time - (Math.PI * time / 2)), 0, 0);
+			for (var j =0; j < currObj.numChildren(); ++j) {
+				currObj.getChild(j).identity().translate(4*(j%4)-6, j<4?2:-2, 0).rotateY(time).rotateX(time/2);
+			}
+		}
+		obj.draw();
+		//SCALE ALL OBJECTS BIGGER OR SMALLER
+		if (growBigger || shrinkSmaller) {
+			obj.scale(getScale(), getScale(), getScale());
+		}
 	}
 
 	function resetProperties() {
@@ -142,25 +249,30 @@
 		translZ = 0;
 		deltaMouseX = 0;
 		deltaMouseY = 0;
+		growBigger = false;
+		shrinkSmaller = false;
+		worldTransform = CT.matrixIdentity();
 	}
 
 	function update() {
-		for (var i = 0 ; i < obj.numChildren() ; i++) {
-		  var currObj = obj.getChild(i);
-		  //currObj.translate(Math.sin(Math.PI * time - (Math.PI * time / 2)), 0, 0);
-		  for (var j =0; j < currObj.numChildren(); ++j) {
-			currObj.getChild(j).identity().translate(4*(j%4)-6, j<4?2:-2, 0).rotateY(time).rotateX(time/2);
-		  }
-		}
-		obj.draw();
+	    // when element is clicked, we're going to request a
+        // pointerlock
+		(function($){
+        $("#pointerLock").click(function () {
+            var canvas = $("#pointerLock").get()[0];
+            canvas.requestPointerLock = canvas.requestPointerLock ||
+                    canvas.mozRequestPointerLock ||
+                    canvas.webkitRequestPointerLock;
+ 
+            // Ask the browser to lock the pointer)
+            canvas.requestPointerLock();
+        });
+		 })(jQuery); 
+	
+		objectDraw();
 		handleKeys();
-		obj.translate(translX, translY, translZ)
-		   .rotateY(deltaMouseX * Math.PI / 180)
-		   .rotateZ(deltaMouseY * Math.PI / 180);
-		if (mouseDown) {
-			obj.scale(1.1, 1.1, 1.1);
-		}
-		//resetProperties();
+		handleMovement();
+		resetProperties();
 	}
 
 	setTimeout(function() {
@@ -171,9 +283,8 @@
 			}, 16);
 		}, 100
 	);
-
 </script>
 <center>
-<canvas id=canvas1 width=1024 height=768></canvas>
+<canvas id=canvas1 height=720 width=1080 style="background:black;"></canvas>
 </center>
 </body>
