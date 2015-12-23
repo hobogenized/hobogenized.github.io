@@ -4,7 +4,7 @@
 	 <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.3/jquery.min.js"></script>
 	<script src=CT_Modeler.js></script>
 </head>
-<body style="background:white;">
+<body style="background:black;">
 
 
 <script>
@@ -21,7 +21,7 @@
 	var deltaMouseX = 0,
 	    deltaMouseY = 0;
 	
-	var scaleFactor = 2,
+	var scaleFactor = 1.0001,
 		mouseScale = 3,
 		speedFactor = 1;
 
@@ -69,26 +69,6 @@
 	   ,'}'
 	].join('\n');
 	
-	var isoSurface = ['const vec3 carDims = vec3(.9,.72,2.4);'
-	,'float isosurface( vec3 pos ){'
-	,'const float smoothing = .1;'
-	,'return'
-		,'log('
-				,'exp((-pos.y-carDims.y)/smoothing)'
-				,'+ exp((pos.x-carDims.x)/smoothing)'
-				,'+ exp((-pos.x-carDims.x)/smoothing)'
-				,'+ 1.0/('
-				,'	exp(-(length(pos-vec3(0,carDims.y-2.0,-.5))-2.0)/smoothing)'
-				,'	+ 1.0/('
-				,'		exp((dot(pos,vec3(0,.9992,.04))-0.2)/smoothing)'
-				,'		+ exp((dot(pos,vec3(0,.93675,.35))-.8)/smoothing)'
-				,'		+ exp((pos.z-carDims.z)/smoothing)'
-				,'		+ exp((-pos.z-carDims.z)/smoothing)'
-				,'	)'
-			,'	)'
-		,'	)*smoothing;'
-	,'}'].join('\n');
-	
 	var spireShader = ['precision highp float;'
 				 ,'varying vec3 vNormal;'
 				 ,noise
@@ -100,7 +80,6 @@
 				 
 	var ballShader = ['precision highp float;'
 			 ,'varying vec3 vNormal;'
-			 ,isoSurface
 			 ,'void main() {'
 			 ,'vec3 n = normalize(vNormal);'
 			 ,'n = n*n/sin(n) / 4.;'
@@ -288,12 +267,26 @@
 		   .translate(0,0,3);
 		box.addChild(sq);
 		
+		sq = new CT.Square();
+		sq.scale(100000)
+		   .rotateX(PI / 2)
+		   .setTexture('images/sbox5.jpg')
+		   .translate(0,-4,-1);
+		box.addChild(sq);
+		
+		sq = new CT.Square();
+		sq.scale(100000)
+		   .rotateX(PI / 2)
+		   .setTexture('images/sbox6.jpg')
+		   .translate(0,-4,1);
+		box.addChild(sq);
+		
 		box.translate(0,0,404000);
 	}
 
 	function init() {
 		window.scene = new CT.Scene(canvas1);
-		scene.setLight(0, [0,0,0]);
+		scene.setLight(0, [-1,-1,0]);
 		allObjs = scene._objects;
 		
 		for (var i = 0; i < 3; ++i) {
@@ -343,25 +336,25 @@
 	function handleKeys() {
 		var k = pressedKeys;
 		if (k[49]) {
-			speedFactor = Math.max(.01, speedFactor / 2);
+			speedFactor = Math.max(.01, speedFactor - speedFactor);
 		} 
 		if (k[50]) {
-			speedFactor = Math.min(10000,(speedFactor * 2));
+			speedFactor = Math.min(10000,(speedFactor + speedFactor));
 		}
 		if (k[81]) {
 			growBigger = true; //console.log("Q pressed");
 		}
 		if (k[87]) {
-			translZ -= (2 * speedFactor);//console.log("W pressed");
+			translZ = translZ - (2 * speedFactor);//console.log("W pressed");
 		}
 		if (k[65]) {
-			translX -= (2 * speedFactor);//console.log("A pressed");
+			translX = translZ - (2 * speedFactor);//console.log("A pressed");
 		}
 		if (k[83]) {
-			translZ += (2 * speedFactor);//console.log("S pressed");
+			translZ = translZ + (2 * speedFactor);//console.log("S pressed");
 		}
 		if (k[68]) {
-			translX += (2 * speedFactor);//console.log("D pressed");
+			translX = translZ + (2 * speedFactor);//console.log("D pressed");
 		}
 		if (k[69]) {
 			shrinkSmaller = true; // console.log("E pressed");
@@ -402,9 +395,9 @@
 			return scaleFactor;
 		}
 		if (shrinkSmaller) {
-			return 1 / scaleFactor;
+			return 1. / scaleFactor;
 		}
-		return 1;
+		return 1.;
 	}
 
 	//HANDLES ALL I/O MOVEMENT VIA MOUSE AND KEYBOARD
@@ -433,10 +426,11 @@
 		
 		for (var i = 0; i < allObjs.push(); ++i) {
 			allObjs[i].draw();
-		}
-		//SCALE ALL OBJECTS BIGGER OR SMALLER
-		if (growBigger || shrinkSmaller) {
-			objs.scale(getScale(), getScale(), getScale());
+			//SCALE ALL OBJECTS BIGGER OR SMALLER
+			if (growBigger || shrinkSmaller) {
+				//console.log(getScale());
+				allObjs[i].scale(getScale(), getScale(), getScale());
+			}
 		}
 	}
 
@@ -452,9 +446,9 @@
 	}
 
 	function update() {
-		objectDraw();
 		handleKeys();
 		handleMovement();
+		objectDraw();
 		resetProperties();
 	}
 
@@ -468,6 +462,12 @@
 	);
 </script>
 <center>
-<canvas id=canvas1 height=720 width=1080 style="background:black;"></canvas>
+	<canvas id=canvas1 height=720 width=1080 style="background:white;"></canvas>
+	<div style="color:white;">
+	<p>WASD to move forward/backwards and left/right.</p>
+	<p>Click on canvas to capture mouse, ESC to escape. Move mouse to control camera.</p>
+	<p>1 and 2 keys to decrease and increase speed of WASD movement respectively.</p>
+	<p>Q and E handle shrinking and growing the objects.</p>
+	</div>
 </center>
 </body>
