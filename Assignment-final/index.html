@@ -27,45 +27,54 @@
 	var worldTransform = CT.matrixIdentity();
 	
 	var camera;
-	
-    // called when the pointer lock has changed. Here we check whether the
-    // pointerlock was initiated on the element we want.
-    function changeCallback(e) {
-		(function($){
-        var canvas = $("#pointerLock").get()[0];
-		 })(jQuery); 
-        if (document.pointerLockElement === canvas ||
-                document.mozPointerLockElement === canvas ||
-                document.webkitPointerLockElement === canvas) {
- 
-            // we've got a pointerlock for our element, add a mouselistener
-            document.addEventListener("mousemove", moveCallback, false);
-        } else {
- 
-            // pointer lock is no longer active, remove the callback
-            document.removeEventListener("mousemove", moveCallback, false);
- 
-            // and reset the entry coordinates
-            entryCoordinates = {x:-1, y:-1};
-        }
-    };
 
 	function init() {
 		var sin = Math.sin, cos = Math.cos, PI = Math.PI;
 
 		window.scene = new CT.Scene(canvas1);
 		scene.setLight(0, [1,1,1]);
+		
+		window.bigobj = new CT.Node();
+		scene.add(bigobj);
 
-		window.obj = new CT.Node().scale(.1);
-		scene.add(obj);
+		window.objs = new CT.Node().scale(.001);
+		bigobj.addChild(objs);
+
+		var obj1 = new CT.Node();
+		objs.addChild(obj1);
+
+		bigobj.addChild(new CT.Parametric(20,20,function(u,v){
+				return [2*u-1 * cos(u) / Math.max(sin(v), .001), 2*v-1 / Math.max(sin(u), .001), sin(1+10*u)*sin(1+10*v)/4];
+			}
+			));
+		bigobj.getChild(1).setColor([0,1,1]);
+		bigobj.rotateY(90 * PI / 180);
+		bigobj.getChild(1).translate(0, 0, 0);
+		bigobj.getChild(1).setFragmentShader(
+		  ['precision highp float;'
+		  ,'varying vec3 vNormal;'
+		  ,'void main() {'
+		  , 'vec3 n = normalize(vNormal);' 
+		  , 'gl_FragColor = vec4(n*n,1.); }'
+		  ].join('\n')
+		);
 		
 		/*
-		var obj1 = new CT.Node();
-		obj.addChild(obj1);
-
+		bigobj.addChild(new CT.Revolved(16, 8, function(t) {
+				return [sin(PI * 5 * t)/-Math.max(cos(Math.max(sin(t), .001),.001)), -(2*t-1 / Math.max(cos(t), .001))]; 
+			} 
+			));
+		bigobj.getChild(1).setColor([0,1,0]);
+		bigobj.getChild(1).rotateZ(90 * PI / 180);
+		//*/
+		obj1.addChild(new CT.Revolved(20,20,function(u){
+				return [-2*u-1 / Math.max(sin(u), .001), sin(u)/ Math.max(-2*u-1, .001), sin(1+10*u)*cos(1+10*u)/4];
+			}
+			));
+		obj1.getChild(0).setColor([0,1,1]);
+		/*
 		obj1.addChild(new CT.Cube());
 		obj1.getChild(0).setTexture('images/xy.png');
-
 		obj1.addChild(new CT.Cylinder(8));
 		obj1.getChild(1).setFragmentShader(
 		  ['precision highp float;'
@@ -76,29 +85,21 @@
 		//*/
 		
 		var obj2 = new CT.Node();
-		obj.addChild(obj2);
-
+		objs.addChild(obj2);
+/*
 		var sphere = new CT.Sphere(128, 128);
 		obj2.addChild(sphere);
 		obj2.getChild(0).setTexture('images/sun.png');
 		
-		/*
 		obj2.addChild(new CT.Extruded(16,100,
-					function(u,v){ v=.30-.06*cos(2*PI*v); u*=4*PI; return [v*cos(u),v*sin(u)] },          // PROFILE
-					function(v){v*=4*PI;var r=1-cos(1.5*v)/5;return[sin(1.5*v)/2,r*cos(v),r*sin(v)];})); // PATH
-		obj2.getChild(0).setColor([1,0,0]);
-		
-
-		obj2.addChild(new CT.Parametric(20,20,function(u,v){return [2*u-1, 2*v-1, sin(1+10*u)*sin(1+10*v)/4];}));
-		obj2.getChild(1).setColor([0,1,1]);
-
-		obj2.addChild(new CT.Revolved(16, 8, function(t) { return [sin(PI * 5 * t), 2*t-1]; } ));
-		obj2.getChild(2).setColor([0,1,0]);
+					function(u,v){ v=.06*cos(2*PI*v); u*=4*PI; return [v*sin(u)/Math.max(.001,cos(u)),v*sin(u)/Math.max(.001,cos(u))] },          // PROFILE
+					function(v){v*=4*PI;var r=cos(1.5*v)/5;return[sin(1.5*v)/2,r*cos(v),r * cos(v)];})); // PATH
+		obj2.getChild(1).setColor([1,0,0]);
 		//*/
-		
+		/*
 		var obj3 = new CT.Node();
-		obj.addChild(obj3);
-
+		objs.addChild(obj3);
+*/
 		/*
 		obj3.addChild(new CT.Sphere(16, 8));
 		obj3.getChild(0).setColor([1,1,1]).setTexture('images/brick.png');
@@ -112,9 +113,9 @@
 						   .setNormalMap('images/normal_map_2.jpg');
 		//*/
 						
-		var tube = new CT.Revolved(20, 16, function(t) { return[sin(t * PI / 2) - 10, cos(t * 2 + 1) - 20];});	   
+		var tube = new CT.Revolved(20, 16, function(t) { return[sin(t * PI / 2)/Math.max(sin(1/Math.max(.001,t)),.001), cos(t * 2 + 1) - 20];});	   
 		var obj4 = new CT.Node();
-		obj.addChild(obj4);
+		objs.addChild(obj4);
 		obj4.addChild(tube);
 		
 		document.onkeydown = handleKeyDown;
@@ -123,22 +124,17 @@
         document.onmouseup = handleMouseUp;
         document.onmousemove   = handleMouseMove;
 		
-		var elem = document.getElementById("canvas1");
-		elem.requestPointerLock = elem.requestPointerLock ||
-									 elem.mozRequestPointerLock ||
-                                     elem.webkitRequestPointerLock;
-
-		elem.requestPointerLock();
+		canvas1.requestPointerLock = canvas1.requestPointerLock ||
+									 canvas1.mozRequestPointerLock ||
+                                     canvas1.webkitRequestPointerLock;
+									 
+		canvas1.onclick = function() {
+			canvas1.requestPointerLock();
+		}
 		
 		document.exitPointerLock = document.exitPointerLock ||
 			   document.mozExitPointerLock ||
 			   document.webkitExitPointerLock;
-		document.exitPointerLock();
-		
-		// Hook pointer lock state change events
-		document.addEventListener('pointerlockchange', changeCallback, false);
-		document.addEventListener('mozpointerlockchange', changeCallback, false);
-		document.addEventListener('webkitpointerlockchange', changeCallback, false);
 	}
 	
 	function handleKeyDown(e) {
@@ -229,17 +225,22 @@
 	}
 
 	function objectDraw() {
-		for (var i = 0 ; i < obj.numChildren() ; i++) {
-			var currObj = obj.getChild(i);
-			//currObj.translate(Math.sin(Math.PI * time - (Math.PI * time / 2)), 0, 0);
+		for (var i = 0 ; i < objs.numChildren() ; i++) {
+			var currObj = objs.getChild(i);
+			//currobjs.translate(Math.sin(Math.PI * time - (Math.PI * time / 2)), 0, 0);
 			for (var j =0; j < currObj.numChildren(); ++j) {
 				currObj.getChild(j).identity().translate(4*(j%4)-6, j<4?2:-2, 0).rotateY(time).rotateX(time/2);
 			}
 		}
-		obj.draw();
+		/*
+		for (var i = 1; i < bigobj.numChildren(); ++i) {
+			bigobj.getChild(i);
+		}*/
+		objs.draw();
+		bigobj.draw();
 		//SCALE ALL OBJECTS BIGGER OR SMALLER
 		if (growBigger || shrinkSmaller) {
-			obj.scale(getScale(), getScale(), getScale());
+			objs.scale(getScale(), getScale(), getScale());
 		}
 	}
 
@@ -255,19 +256,6 @@
 	}
 
 	function update() {
-	    // when element is clicked, we're going to request a
-        // pointerlock
-		(function($){
-        $("#pointerLock").click(function () {
-            var canvas = $("#pointerLock").get()[0];
-            canvas.requestPointerLock = canvas.requestPointerLock ||
-                    canvas.mozRequestPointerLock ||
-                    canvas.webkitRequestPointerLock;
- 
-            // Ask the browser to lock the pointer)
-            canvas.requestPointerLock();
-        });
-		 })(jQuery); 
 	
 		objectDraw();
 		handleKeys();
