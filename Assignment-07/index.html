@@ -5,35 +5,39 @@
 
     <table>
 
-    <tr>
-    <td><canvas id=canvas1 width=300 height=200></td>
-    <td width=50></td>
-    <td valign=top>
+      <tr>
+        <td><canvas id=canvas1 width=300 height=200></td>
+        <td width=50></td>
+        <td valign=top>
 
-    </td>
-    </tr>
+        </td>
+      </tr>
 
-    <tr>
-    <td><canvas id=canvas2 width=300 height=200></td>
-    <td width=50></td>
-    <td valign=top>
-    </td>
-    </tr>
-    
-    <tr>
-    <td><canvas id=canvas3 width=300 height=200></td>
-    <td width=50></td>
-    <td valign=top>
-    </td>
-    </tr>
+      <tr>
+        <td><canvas id=canvas2 width=300 height=200></td>
+        <td width=50></td>
+        <td valign=top>
+        </td>
+      </tr>
+      
+      <tr>
+        <td><canvas id=canvas3 width=300 height=200></td>
+        <td width=50></td>
+        <td valign=top>
+        </td>
+      </tr>
 
     </table>
 
     <script src=drawlib1.js></script>
     <script>
+      var pi = Math.PI,
+          sphRad = 1,
+          torRad = 1,
+          torSize = .5;
       
       var mat  = new Matrix();
-      
+
       var q = new Vector4(0, 0, 0, 0);
 
       var i = 0, j = 0;
@@ -42,73 +46,76 @@
           theta = 0.0, phi = 0.0,  r = .15;
           
       var w = 0, h = 0;
-      
+
       var points  = [];
-      
+
       var cyl = [];
-      
-      for (i = 0.0; i < 1.01; i += 0.05) {
-        for (j = 0.0; j < 1.01; j += 0.05) {
+
+      var vCoords = 24., uCoords = 48.;
+
+      var formCylinderStrips = function(u, uCoords, v, vCoords, radius, verts) {
+        theta = 2 * pi * u / uCoords;
+        var x = Math.cos(theta) * radius;
+        var y = Math.sin(theta) * radius;
+        var z = (1 - 2 * v/vCoords) * radius;
+
+        verts.push(new Vector3(x, y, z));
+      }
+
+      for (v = 0.0; v < 1.0; v += 0.05) {
+        for (u = 0.0; u < 1.0; u += 0.05) {
+          formCylinderStrips(u, uCoords, v, vCoords, sphRad, cyl);
+          formCylinderStrips(u, uCoords, v+1, vCoords, sphRad, cyl);
+          formCylinderStrips(u+1, uCoords, v, vCoords, sphRad, cyl);
+          formCylinderStrips(u, uCoords, v+1, vCoords, sphRad, cyl);
+          formCylinderStrips(u+1, uCoords, v+1, vCoords, sphRad, cyl);
+        /*
             theta = 2 * Math.PI * i;
             currX = Math.sin(theta);
             currY = 2 * j - 1;
             currZ = Math.cos(theta);
-            cyl.push(new Vector3(currX, currY, currZ));
+            cyl.push(new Vector3(currX, currY, currZ));*/
         }
       }
-      
+
       var sph = [];
 
-   var formSphereStrips = function(u, uCoords, v, vCoords, radius, verts){
-        var theta = 2 * Math.PI * u / uCoords,
-            phi = Math.PI * (v / vCoords) - (Math.PI / 2);
+      var formSphereStrips = function(u, uCoords, v, vCoords, radius, verts){
+        var theta = 2 * pi * u / uCoords,
+            phi = pi * (v / vCoords) - (pi / 2);
         var x = Math.cos(phi) * Math.cos(theta) * radius,
             y = Math.cos(phi) * Math.sin(theta) * radius,
             z = Math.sin(phi) * radius;
         verts.push(new Vector3(x, y, z));
-		/*verts.push(x);
-        verts.push(y);
-        verts.push(z);*/
-   }
-   
-   var vCoords = 30., uCoords = 40.;
-   
-    for(var v = 0; v < vCoords; ++v){
+      }
+
+      for(var v = 0; v < vCoords; ++v){
         for(var u = 0; u < uCoords; ++u){
-            formSphereStrips(u, uCoords, v, vCoords, 6.0, sph);
-            formSphereStrips(u, uCoords, v+1, vCoords, 6.0, sph);
-            formSphereStrips(u+1, uCoords, v, vCoords, 6.0, sph);
-            formSphereStrips(u, uCoords, v+1, vCoords, 6.0, sph);
-            formSphereStrips(u+1, uCoords, v+1, vCoords, 6.0, sph);
-        }
-    }
-	  /*
-      for (i = 0.0; i < 1.0; i += 0.05) {
-        for (j = 0.0; j < 1.0; j += 0.05) {
-            theta = 2 * Math.PI * i;
-            phi = Math.PI * j - Math.PI / 2;
-            currX = Math.cos(phi) * Math.sin(theta);
-            currY = Math.sin(phi);
-            currZ = Math.cos(phi) * Math.cos(theta);
-
-            sph.push(new Vector3(currX, currY, currZ));
-        }
-      }*/
-      
-      var tor = [];
-      
-      for (i = 0.0; i < 1.0; i += 0.05) {
-        for (j = 0.0; j < 1.0; j += 0.05) {
-            theta = 2 * Math.PI * i;
-            phi = 2 * Math.PI * j;
-            currX = (1 + r * Math.cos(phi)) * Math.cos(theta);
-            currY = (1 + r * Math.cos(phi)) * Math.sin(theta);
-            currZ = r * Math.sin(theta);
-
-            tor.push(new Vector3(currX, currY, currZ));
+            formSphereStrips(u, uCoords, v, vCoords, sphRad, sph);
+            formSphereStrips(u, uCoords, v+1, vCoords, sphRad, sph);
+            formSphereStrips(u+1, uCoords, v, vCoords, sphRad, sph);
         }
       }
-      
+
+      var tor = [];
+
+      var formTorusStrips = function(u, uCoords, v, vCoords, radius, size, verts) {
+        var theta = 2 * pi * u / uCoords,
+            phi   = 2 * pi * (v / vCoords);
+        var x = (1 + radius * Math.cos(phi)) * Math.cos(theta) * size,
+            y = (1 + radius * Math.cos(phi)) * Math.sin(theta) * size,
+            z = radius * Math.sin(phi) * size;
+        verts.push(new Vector3(x, y, z));
+      }
+
+      for (i = 0.0; i < 1.0; i += 0.05) {
+        for (j = 0.0; j < 1.0; j += 0.05) {
+            formTorusStrips(u, uCoords, v, vCoords, torRad, torSize, tor);
+            formTorusStrips(u, uCoords, v+1, vCoords, torRad, torSize, tor);
+            formTorusStrips(u+1, uCoords, v, vCoords, torRad, torSize, tor);
+        }
+      }
+
       currX = Math.sin(0);
       currY = -1;
       x = viewPortX(w, h, currX);
@@ -118,7 +125,7 @@
       function viewPortX(w, h, vX) {
         return (w / 2) + vX * (w / 2);
       }
-      
+
       function viewPortY(w, h, vY) {
         return (h / 2) - currY * (h / 2);
       }
@@ -148,9 +155,9 @@
           }
 
           mat.identity()
-             .rotateY(Math.sin(5 * Math.PI * time) / 10)
-             .rotateX(Math.sin(5 * Math.PI * time) / 10)
-             .rotateZ(Math.sin(5 * Math.PI * time) / 10)
+             .rotateY(Math.sin(5 * Math.PI * time) / 100)
+             .rotateX(Math.sin(5 * Math.PI * time) / 100)
+             .rotateZ(Math.sin(5 * Math.PI * time) / 100)
              .translate(Math.sin(5 * Math.PI * time) / 100,
                         Math.sin(    Math.PI * time) / 100,
                         Math.sin(5 * Math.PI * time) / 100);
@@ -170,7 +177,7 @@
           
           points  = [];
           
-          for (i = 0; i < tor.push(); ++i) {
+          for (i = 0; i < sph.push(); ++i) {
             currX = sph[i].x;
             currY = sph[i].y;
             
@@ -188,12 +195,11 @@
           }
           
           mat.identity()
-             .rotateY(Math.sin(5 * Math.PI * time) / 10)
-             
-             .rotateZ(Math.sin(5 * Math.PI * time) / 10)
-             .translate(Math.sin(5 * Math.PI * time) / 100,
+             .rotateY(Math.PI / 180 * 0.5)
+             .rotateZ(Math.PI / 180)
+             /*.translate(Math.sin(5 * Math.PI * time) / 100,
                         Math.sin(    Math.PI * time) / 100,
-                        Math.sin(5 * Math.PI * time) / 100);
+                        Math.sin(5 * Math.PI * time) / 100)*/;
           
           for (i = 0; i < sph.push(); ++i) {
 
@@ -228,12 +234,13 @@
           }
           
           mat.identity()
-             .rotateY(Math.sin(5 * Math.PI * time) / 10)
+             /*.rotateZ(pi /180);
+             .rotateY(Math.sin(5 * Math.PI * time) / 10);
              .rotateX(Math.sin(5 * Math.PI * time) - 10)
              .rotateZ(Math.sin(5 * Math.PI / time) - 10)
              .translate(Math.sin(5 * Math.PI * time) / 100,
                         Math.sin(    Math.PI * time) / 100,
-                        Math.sin(5 * Math.PI * time) / 100);
+                        Math.sin(5 * Math.PI * time) / 100);*/
           
           for (i = 0; i < tor.push(); ++i) {
 
